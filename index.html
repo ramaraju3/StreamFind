@@ -8,684 +8,247 @@
 <meta name="apple-mobile-web-app-title" content="StreamFind">
 <meta name="theme-color" content="#0a0a0f">
 <title>StreamFind</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #0a0a0f;
-    --surface: #13131a;
-    --surface2: #1c1c27;
-    --border: rgba(255,255,255,0.07);
-    --accent: #e8ff47;
-    --accent2: #7b6fff;
-    --text: #f0f0f5;
-    --muted: #6b6b80;
-    --safe-top: env(safe-area-inset-top, 0px);
-    --safe-bottom: env(safe-area-inset-bottom, 0px);
-  }
+:root {
+  --bg: #0a0a0f;
+  --s1: #13131a;
+  --s2: #1c1c27;
+  --bd: rgba(255,255,255,0.07);
+  --acc: #e8ff47;
+  --pur: #7b6fff;
+  --tx: #f0f0f5;
+  --mu: #6b6b80;
+  --safe-top: env(safe-area-inset-top, 44px);
+  --safe-bot: env(safe-area-inset-bottom, 20px);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; background: var(--bg); color: var(--tx); font-family: 'DM Sans', sans-serif; overflow-x: hidden; }
+body::before {
+  content: ''; position: fixed; top: -30%; left: -20%; width: 70%; height: 70%;
+  background: radial-gradient(circle, rgba(123,111,255,0.12) 0%, transparent 70%);
+  pointer-events: none; z-index: 0;
+}
+.app { position: relative; z-index: 1; max-width: 480px; margin: 0 auto; padding: 0 18px; display: flex; flex-direction: column; min-height: 100dvh; }
+header { padding-top: calc(var(--safe-top) + 12px); padding-bottom: 20px; }
+.logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 28px; letter-spacing: -0.5px; }
+.logo span { color: var(--acc); }
+.logo-sub { font-size: 11px; color: var(--mu); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 3px; }
 
-  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+.search-wrap { position: relative; margin-bottom: 10px; }
+input[type=text] {
+  width: 100%; background: var(--s1); border: 1px solid var(--bd);
+  border-radius: 14px; padding: 15px 50px 15px 16px;
+  font-size: 16px; font-family: 'DM Sans', sans-serif; color: var(--tx);
+  outline: none; -webkit-appearance: none; transition: border-color 0.2s;
+}
+input[type=text]::placeholder { color: var(--mu); }
+input[type=text]:focus { border-color: rgba(123,111,255,0.5); background: var(--s2); }
+.go {
+  position: absolute; right: 7px; top: 50%; transform: translateY(-50%);
+  width: 36px; height: 36px; border-radius: 9px; background: var(--acc);
+  border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: transform 0.15s, opacity 0.15s;
+}
+.go:active { transform: translateY(-50%) scale(0.9); opacity: 0.8; }
+.go svg { width: 15px; height: 15px; }
 
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'DM Sans', sans-serif;
-    min-height: 100dvh;
-    overflow-x: hidden;
-    padding-top: var(--safe-top);
-    padding-bottom: var(--safe-bottom);
-  }
+.filters { display: flex; gap: 7px; margin-bottom: 20px; }
+.fb {
+  flex: 1; padding: 9px; border-radius: 10px; border: 1px solid var(--bd);
+  background: var(--s1); color: var(--mu); font-family: 'DM Sans', sans-serif;
+  font-size: 13px; cursor: pointer; transition: all 0.15s; text-align: center;
+}
+.fb.on { background: var(--pur); border-color: var(--pur); color: #fff; font-weight: 500; }
 
-  /* Ambient background */
-  body::before {
-    content: '';
-    position: fixed;
-    top: -30%;
-    left: -20%;
-    width: 70%;
-    height: 70%;
-    background: radial-gradient(circle, rgba(123,111,255,0.12) 0%, transparent 70%);
-    pointer-events: none;
-    z-index: 0;
-  }
-  body::after {
-    content: '';
-    position: fixed;
-    bottom: -20%;
-    right: -10%;
-    width: 60%;
-    height: 60%;
-    background: radial-gradient(circle, rgba(232,255,71,0.06) 0%, transparent 70%);
-    pointer-events: none;
-    z-index: 0;
-  }
+#out { flex: 1; }
 
-  .app {
-    position: relative;
-    z-index: 1;
-    max-width: 480px;
-    margin: 0 auto;
-    padding: 0 20px;
-    min-height: 100dvh;
-    display: flex;
-    flex-direction: column;
-  }
+.msg { font-size: 14px; color: var(--mu); text-align: center; padding: 3rem 0; }
+.sp {
+  display: inline-block; width: 18px; height: 18px; border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.1); border-top-color: var(--acc);
+  animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 8px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
 
-  /* Header */
-  header {
-    padding: 28px 0 24px;
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-  }
+.card {
+  background: var(--s1); border: 1px solid var(--bd); border-radius: 18px;
+  overflow: hidden; margin-bottom: 10px;
+  animation: up 0.3s ease both;
+}
+@keyframes up { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+.card:nth-child(2) { animation-delay: 0.05s; }
+.card:nth-child(3) { animation-delay: 0.1s; }
+.card:nth-child(4) { animation-delay: 0.15s; }
 
-  .logo {
-    font-family: 'Syne', sans-serif;
-    font-weight: 800;
-    font-size: 26px;
-    letter-spacing: -0.5px;
-    line-height: 1;
-  }
-  .logo span { color: var(--accent); }
+.ctop { display: flex; gap: 12px; padding: 14px; align-items: flex-start; }
+.poster { width: 58px; height: 86px; border-radius: 9px; object-fit: cover; background: var(--s2); flex-shrink: 0; border: 1px solid var(--bd); }
+.poster-ph { width: 58px; height: 86px; border-radius: 9px; background: var(--s2); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 24px; border: 1px solid var(--bd); }
+.cinfo { flex: 1; min-width: 0; }
+.ctitle { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 15px; line-height: 1.2; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cmeta { display: flex; align-items: center; gap: 6px; margin-bottom: 7px; flex-wrap: wrap; }
+.bdg { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; padding: 2px 7px; border-radius: 5px; }
+.bdg.movie { color: var(--acc); background: rgba(232,255,71,0.08); border: 1px solid rgba(232,255,71,0.2); }
+.bdg.tv { color: var(--pur); background: rgba(123,111,255,0.1); border: 1px solid rgba(123,111,255,0.25); }
+.yr { font-size: 12px; color: var(--mu); }
+.ov { font-size: 12px; color: var(--mu); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
-  .logo-sub {
-    font-size: 11px;
-    color: var(--muted);
-    font-weight: 300;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    margin-top: 4px;
-  }
+.prov { border-top: 1px solid var(--bd); padding: 12px 14px; }
+.pload { font-size: 12px; color: var(--mu); display: flex; align-items: center; gap: 6px; }
+.msp { width: 12px; height: 12px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,0.1); border-top-color: var(--pur); animation: spin 0.7s linear infinite; flex-shrink: 0; }
 
-  /* Search */
-  .search-wrap {
-    position: relative;
-    margin-bottom: 12px;
-  }
+.pgrp { margin-bottom: 10px; }
+.pgrp:last-of-type { margin-bottom: 4px; }
+.plbl { font-size: 10px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--mu); margin-bottom: 7px; display: flex; align-items: center; gap: 5px; }
+.dot { width: 6px; height: 6px; border-radius: 50%; }
+.dot.g { background: #4ade80; }
+.dot.y { background: #facc15; }
+.dot.p { background: var(--pur); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { display: flex; align-items: center; gap: 5px; background: var(--s2); border: 1px solid var(--bd); border-radius: 7px; padding: 4px 9px 4px 4px; font-size: 12px; color: var(--tx); }
+.plogo { width: 22px; height: 22px; border-radius: 5px; object-fit: cover; }
+.nonefound { font-size: 13px; color: var(--mu); font-style: italic; }
+.jw-link { display: inline-flex; align-items: center; gap: 4px; margin-top: 9px; font-size: 11px; color: var(--mu); text-decoration: none; border: 1px solid var(--bd); border-radius: 6px; padding: 3px 8px; }
 
-  .search-input {
-    width: 100%;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 16px 52px 16px 18px;
-    font-size: 16px;
-    font-family: 'DM Sans', sans-serif;
-    color: var(--text);
-    outline: none;
-    transition: border-color 0.2s, background 0.2s;
-    -webkit-appearance: none;
-  }
-  .search-input::placeholder { color: var(--muted); }
-  .search-input:focus {
-    border-color: rgba(123,111,255,0.5);
-    background: var(--surface2);
-  }
-
-  .search-btn {
-    position: absolute;
-    right: 8px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 38px;
-    height: 38px;
-    border-radius: 10px;
-    background: var(--accent);
-    border: none;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: transform 0.15s, opacity 0.15s;
-    flex-shrink: 0;
-  }
-  .search-btn:active { transform: translateY(-50%) scale(0.92); opacity: 0.8; }
-  .search-btn svg { width: 16px; height: 16px; }
-
-  .filter-row {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 24px;
-  }
-  .filter-btn {
-    flex: 1;
-    padding: 10px;
-    border-radius: 10px;
-    border: 1px solid var(--border);
-    background: var(--surface);
-    color: var(--muted);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 13px;
-    cursor: pointer;
-    transition: all 0.15s;
-    text-align: center;
-  }
-  .filter-btn.active {
-    background: var(--accent2);
-    border-color: var(--accent2);
-    color: #fff;
-    font-weight: 600;
-  }
-
-  /* States */
-  .state {
-    flex: 1;
-    display: none;
-    flex-direction: column;
-  }
-  .state.visible { display: flex; }
-
-  /* Empty state */
-  #state-empty {
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    padding-bottom: 80px;
-  }
-  .empty-icon {
-    width: 72px;
-    height: 72px;
-    border-radius: 20px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 30px;
-    margin-bottom: 4px;
-  }
-  .empty-title {
-    font-family: 'Syne', sans-serif;
-    font-weight: 700;
-    font-size: 20px;
-    text-align: center;
-  }
-  .empty-sub {
-    font-size: 14px;
-    color: var(--muted);
-    text-align: center;
-    line-height: 1.5;
-    max-width: 260px;
-  }
-
-  /* Loading */
-  #state-loading {
-    align-items: center;
-    justify-content: center;
-    gap: 16px;
-    padding-bottom: 80px;
-  }
-  .spinner {
-    width: 40px;
-    height: 40px;
-    border: 2px solid var(--border);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .loading-text { color: var(--muted); font-size: 14px; }
-
-  /* Results */
-  #state-results { gap: 0; }
-
-  .results-header {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    margin-bottom: 16px;
-  }
-  .results-count {
-    font-size: 12px;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-  }
-
-  /* Result card */
-  .result-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    overflow: hidden;
-    margin-bottom: 12px;
-    transition: border-color 0.2s;
-    animation: slideUp 0.3s ease both;
-  }
-  .result-card:nth-child(2) { animation-delay: 0.05s; }
-  .result-card:nth-child(3) { animation-delay: 0.1s; }
-  .result-card:nth-child(4) { animation-delay: 0.15s; }
-
-  @keyframes slideUp {
-    from { opacity: 0; transform: translateY(16px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  .card-hero {
-    display: flex;
-    gap: 14px;
-    padding: 16px;
-    align-items: flex-start;
-  }
-
-  .card-poster {
-    width: 60px;
-    height: 90px;
-    border-radius: 10px;
-    object-fit: cover;
-    background: var(--surface2);
-    flex-shrink: 0;
-    border: 1px solid var(--border);
-  }
-  .card-poster-placeholder {
-    width: 60px;
-    height: 90px;
-    border-radius: 10px;
-    background: var(--surface2);
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 22px;
-    border: 1px solid var(--border);
-  }
-
-  .card-info { flex: 1; min-width: 0; }
-
-  .card-title {
-    font-family: 'Syne', sans-serif;
-    font-weight: 700;
-    font-size: 16px;
-    line-height: 1.2;
-    margin-bottom: 5px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .card-meta {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 10px;
-    flex-wrap: wrap;
-  }
-  .badge {
-    font-size: 10px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    padding: 3px 8px;
-    border-radius: 6px;
-    background: var(--surface2);
-    color: var(--muted);
-    border: 1px solid var(--border);
-  }
-  .badge.movie { color: var(--accent); border-color: rgba(232,255,71,0.2); background: rgba(232,255,71,0.06); }
-  .badge.tv { color: var(--accent2); border-color: rgba(123,111,255,0.2); background: rgba(123,111,255,0.08); }
-
-  .card-year { font-size: 13px; color: var(--muted); }
-  .card-overview {
-    font-size: 12px;
-    color: var(--muted);
-    line-height: 1.5;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
-  /* Providers section */
-  .providers-section {
-    border-top: 1px solid var(--border);
-    padding: 14px 16px;
-  }
-
-  .providers-loading {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: var(--muted);
-    font-size: 13px;
-  }
-  .mini-spinner {
-    width: 14px;
-    height: 14px;
-    border: 1.5px solid var(--border);
-    border-top-color: var(--accent2);
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-    flex-shrink: 0;
-  }
-
-  .providers-label {
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--muted);
-    margin-bottom: 10px;
-    font-weight: 600;
-  }
-
-  .provider-group { margin-bottom: 12px; }
-  .provider-group:last-child { margin-bottom: 0; }
-
-  .group-label {
-    font-size: 10px;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    margin-bottom: 8px;
-  }
-  .group-label .dot {
-    display: inline-block;
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    margin-right: 5px;
-    vertical-align: middle;
-  }
-  .group-label.flatrate .dot { background: #4ade80; }
-  .group-label.rent .dot { background: var(--accent); }
-  .group-label.buy .dot { background: var(--accent2); }
-
-  .provider-chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 7px;
-  }
-
-  .provider-chip {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 5px 10px 5px 5px;
-    font-size: 12px;
-    font-weight: 400;
-    color: var(--text);
-    white-space: nowrap;
-  }
-  .provider-logo {
-    width: 22px;
-    height: 22px;
-    border-radius: 5px;
-    object-fit: cover;
-    background: var(--bg);
-  }
-
-  .no-providers {
-    font-size: 13px;
-    color: var(--muted);
-    font-style: italic;
-  }
-
-  .tmdb-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    margin-top: 10px;
-    font-size: 11px;
-    color: var(--muted);
-    text-decoration: none;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 4px 9px;
-    transition: color 0.15s, border-color 0.15s;
-  }
-  .tmdb-link:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
-
-  /* Error state */
-  #state-error {
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    padding-bottom: 80px;
-  }
-  .error-box {
-    background: rgba(255,80,80,0.08);
-    border: 1px solid rgba(255,80,80,0.2);
-    border-radius: 14px;
-    padding: 20px;
-    text-align: center;
-    max-width: 300px;
-  }
-  .error-box h3 { font-family: 'Syne', sans-serif; font-size: 16px; margin-bottom: 6px; }
-  .error-box p { font-size: 13px; color: var(--muted); line-height: 1.5; }
-
-  /* Footer */
-  footer {
-    padding: 20px 0 12px;
-    text-align: center;
-    font-size: 11px;
-    color: var(--muted);
-  }
-  footer a { color: var(--muted); }
+footer { padding: 16px 0 calc(var(--safe-bot) + 8px); text-align: center; font-size: 11px; color: var(--mu); }
+footer a { color: var(--mu); }
 </style>
 </head>
 <body>
 <div class="app">
   <header>
-    <div>
-      <div class="logo">Stream<span>Find</span></div>
-      <div class="logo-sub">Where to watch anything</div>
-    </div>
+    <div class="logo">Stream<span>Find</span></div>
+    <div class="logo-sub">Where to watch anything</div>
   </header>
 
   <div class="search-wrap">
-    <input class="search-input" type="text" id="searchInput" placeholder="Search movies &amp; TV shows…" autocomplete="off" autocorrect="off" spellcheck="false">
-    <button class="search-btn" id="searchBtn" aria-label="Search">
+    <input type="text" id="q" placeholder="Search movies &amp; TV shows…" autocomplete="off" autocorrect="off" spellcheck="false">
+    <button class="go" id="go" aria-label="Search">
       <svg viewBox="0 0 24 24" fill="none" stroke="#0a0a0f" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/>
       </svg>
     </button>
   </div>
 
-  <div class="filter-row">
-    <button class="filter-btn active" data-type="all">All</button>
-    <button class="filter-btn" data-type="movie">Movies</button>
-    <button class="filter-btn" data-type="tv">TV Shows</button>
+  <div class="filters">
+    <button class="fb on" data-t="all">All</button>
+    <button class="fb" data-t="movie">Movies</button>
+    <button class="fb" data-t="tv">TV Shows</button>
   </div>
 
-  <!-- Empty -->
-  <div class="state visible" id="state-empty">
-    <div class="empty-icon">🎬</div>
-    <div class="empty-title">Find where to watch</div>
-    <div class="empty-sub">Search any movie or TV show to see which streaming services have it</div>
-  </div>
-
-  <!-- Loading -->
-  <div class="state" id="state-loading">
-    <div class="spinner"></div>
-    <div class="loading-text">Searching…</div>
-  </div>
-
-  <!-- Error -->
-  <div class="state" id="state-error">
-    <div class="error-box">
-      <h3>Something went wrong</h3>
-      <p id="errorMsg">Could not fetch results. Please try again.</p>
-    </div>
-  </div>
-
-  <!-- Results -->
-  <div class="state" id="state-results">
-    <div class="results-header">
-      <div class="results-count" id="resultsCount"></div>
-    </div>
-    <div id="resultsList"></div>
-  </div>
+  <div id="out"><div class="msg">Search for a movie or TV show</div></div>
 
   <footer>Data from <a href="https://www.themoviedb.org" target="_blank">TMDB</a> · Streaming info by JustWatch</footer>
 </div>
 
 <script>
-const API_KEY = '6c27741b50b704ef8489173aa786c956';
-const IMG_BASE = 'https://image.tmdb.org/t/p/w154';
-const LOGO_BASE = 'https://image.tmdb.org/t/p/w45';
+const K = '6c27741b50b704ef8489173aa786c956';
+const BASE = 'https://api.themoviedb.org/3';
+const IB = 'https://image.tmdb.org/t/p/w154';
+const LB = 'https://image.tmdb.org/t/p/w45';
+let ftype = 'all', lastQ = '';
 
-let activeType = 'all';
-let lastQuery = '';
+const qi = document.getElementById('q');
+const out = document.getElementById('out');
 
-const searchInput = document.getElementById('searchInput');
-const searchBtn = document.getElementById('searchBtn');
-
-function showState(id) {
-  ['state-empty','state-loading','state-error','state-results'].forEach(s => {
-    document.getElementById(s).classList.toggle('visible', s === id);
-  });
-}
-
-document.querySelectorAll('.filter-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    activeType = btn.dataset.type;
-    if (lastQuery) doSearch(lastQuery);
+document.querySelectorAll('.fb').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('.fb').forEach(x => x.classList.remove('on'));
+    b.classList.add('on');
+    ftype = b.dataset.t;
+    if (lastQ) go(lastQ);
   });
 });
 
-searchBtn.addEventListener('click', () => {
-  const q = searchInput.value.trim();
-  if (q) doSearch(q);
-});
+document.getElementById('go').addEventListener('click', run);
+qi.addEventListener('keydown', e => { if (e.key === 'Enter') { qi.blur(); run(); } });
 
-searchInput.addEventListener('keydown', e => {
-  if (e.key === 'Enter') {
-    searchInput.blur();
-    const q = searchInput.value.trim();
-    if (q) doSearch(q);
-  }
-});
+function run() { const v = qi.value.trim(); if (v) go(v); }
 
-async function doSearch(query) {
-  lastQuery = query;
-  showState('state-loading');
+async function go(q) {
+  lastQ = q;
+  out.innerHTML = '<div class="msg"><span class="sp"></span>Searching…</div>';
   try {
-    const res = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${API_KEY}&query=${encodeURIComponent(query)}&language=en-US&page=1&include_adult=false`);
-    const data = await res.json();
-    let results = (data.results || []).filter(r => r.media_type === 'movie' || r.media_type === 'tv');
-    if (activeType !== 'all') results = results.filter(r => r.media_type === activeType);
-    results = results.slice(0, 6);
-    if (!results.length) {
-      document.getElementById('errorMsg').textContent = `No results found for "${query}".`;
-      showState('state-error');
-      return;
-    }
-    renderResults(results);
+    const r = await fetch(`${BASE}/search/multi?api_key=${K}&query=${encodeURIComponent(q)}&language=en-US&page=1&include_adult=false`);
+    if (!r.ok) throw new Error(`API returned ${r.status}`);
+    const d = await r.json();
+    let res = (d.results || []).filter(x => x.media_type === 'movie' || x.media_type === 'tv');
+    if (ftype !== 'all') res = res.filter(x => x.media_type === ftype);
+    res = res.slice(0, 5);
+    if (!res.length) { out.innerHTML = `<div class="msg">No results for "${esc(q)}"</div>`; return; }
+    out.innerHTML = '';
+    res.forEach(item => {
+      const card = mkCard(item);
+      out.appendChild(card);
+      loadP(item, card.querySelector('.prov'));
+    });
   } catch(e) {
-    document.getElementById('errorMsg').textContent = 'Network error. Please try again.';
-    showState('state-error');
+    out.innerHTML = `<div class="msg">⚠️ ${esc(e.message)}</div>`;
   }
 }
 
-function renderResults(results) {
-  const list = document.getElementById('resultsList');
-  list.innerHTML = '';
-  document.getElementById('resultsCount').textContent = `${results.length} result${results.length !== 1 ? 's' : ''}`;
-  showState('state-results');
-
-  results.forEach(item => {
-    const card = buildCard(item);
-    list.appendChild(card);
-    fetchProviders(item, card.querySelector('.providers-section'));
-  });
-}
-
-function buildCard(item) {
-  const isMovie = item.media_type === 'movie';
-  const title = isMovie ? item.title : item.name;
-  const year = isMovie
-    ? (item.release_date || '').slice(0,4)
-    : (item.first_air_date || '').slice(0,4);
-  const overview = item.overview || '';
-
-  const card = document.createElement('div');
-  card.className = 'result-card';
-  card.innerHTML = `
-    <div class="card-hero">
-      ${item.poster_path
-        ? `<img class="card-poster" src="${IMG_BASE}${item.poster_path}" alt="${title}" loading="lazy">`
-        : `<div class="card-poster-placeholder">${isMovie ? '🎬' : '📺'}</div>`}
-      <div class="card-info">
-        <div class="card-title">${escHtml(title)}</div>
-        <div class="card-meta">
-          <span class="badge ${item.media_type}">${isMovie ? 'Movie' : 'TV Show'}</span>
-          ${year ? `<span class="card-year">${year}</span>` : ''}
-        </div>
-        ${overview ? `<div class="card-overview">${escHtml(overview)}</div>` : ''}
+function mkCard(item) {
+  const isM = item.media_type === 'movie';
+  const title = esc(isM ? item.title : item.name);
+  const year = ((isM ? item.release_date : item.first_air_date) || '').slice(0, 4);
+  const ov = esc(item.overview || '');
+  const div = document.createElement('div');
+  div.className = 'card';
+  div.innerHTML = `<div class="ctop">
+    ${item.poster_path
+      ? `<img class="poster" src="${IB}${item.poster_path}" alt="${title}" loading="lazy">`
+      : `<div class="poster-ph">${isM ? '🎬' : '📺'}</div>`}
+    <div class="cinfo">
+      <div class="ctitle">${title}</div>
+      <div class="cmeta">
+        <span class="bdg ${item.media_type}">${isM ? 'Movie' : 'TV'}</span>
+        ${year ? `<span class="yr">${year}</span>` : ''}
       </div>
+      ${ov ? `<div class="ov">${ov}</div>` : ''}
     </div>
-    <div class="providers-section">
-      <div class="providers-loading"><div class="mini-spinner"></div><span>Checking streaming…</span></div>
-    </div>`;
-  card.dataset.id = item.id;
-  card.dataset.type = item.media_type;
-  return card;
+  </div>
+  <div class="prov"><div class="pload"><span class="msp"></span>Checking streaming…</div></div>`;
+  return div;
 }
 
-async function fetchProviders(item, section) {
+async function loadP(item, section) {
   try {
     const type = item.media_type === 'movie' ? 'movie' : 'tv';
-    const res = await fetch(`https://api.themoviedb.org/3/${type}/${item.id}/watch/providers?api_key=${API_KEY}`);
-    const data = await res.json();
-    const us = (data.results || {}).US;
-    renderProviders(section, us, item);
+    const r = await fetch(`${BASE}/${type}/${item.id}/watch/providers?api_key=${K}`);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const d = await r.json();
+    renderP(section, (d.results || {}).US, item);
   } catch(e) {
-    section.innerHTML = `<div class="no-providers">Could not load streaming info.</div>`;
+    section.innerHTML = `<div class="nonefound">Could not load streaming info</div>`;
   }
 }
 
-function renderProviders(section, us, item) {
-  if (!us) {
-    section.innerHTML = `<div class="no-providers">Not available in the US on any service.</div>`;
-    return;
-  }
-
+function renderP(section, us, item) {
+  if (!us) { section.innerHTML = `<div class="nonefound">Not available for streaming in the US</div>`; return; }
   const groups = [
-    { key: 'flatrate', label: 'Included with subscription', cls: 'flatrate' },
-    { key: 'free',     label: 'Free with ads',              cls: 'flatrate' },
-    { key: 'rent',     label: 'Available to rent',          cls: 'rent' },
-    { key: 'buy',      label: 'Available to buy',           cls: 'buy' },
+    { key: 'flatrate', label: 'Included with subscription', dot: 'g' },
+    { key: 'free',     label: 'Free with ads',              dot: 'g' },
+    { key: 'rent',     label: 'Rent',                       dot: 'y' },
+    { key: 'buy',      label: 'Buy',                        dot: 'p' },
   ];
-
-  let html = '';
-  let hasAny = false;
-
+  let html = ''; let any = false;
   groups.forEach(g => {
-    const providers = us[g.key];
-    if (!providers || !providers.length) return;
-    hasAny = true;
-    html += `<div class="provider-group">
-      <div class="group-label ${g.cls}"><span class="dot"></span>${g.label}</div>
-      <div class="provider-chips">
-        ${providers.map(p => `
-          <div class="provider-chip">
-            ${p.logo_path ? `<img class="provider-logo" src="${LOGO_BASE}${p.logo_path}" alt="${escHtml(p.provider_name)}" loading="lazy">` : ''}
-            ${escHtml(p.provider_name)}
-          </div>`).join('')}
-      </div>
-    </div>`;
+    const ps = us[g.key]; if (!ps || !ps.length) return; any = true;
+    html += `<div class="pgrp"><div class="plbl"><span class="dot ${g.dot}"></span>${g.label}</div>
+      <div class="chips">${ps.map(p =>
+        `<div class="chip">${p.logo_path ? `<img class="plogo" src="${LB}${p.logo_path}" alt="${esc(p.provider_name)}" loading="lazy">` : ''}${esc(p.provider_name)}</div>`
+      ).join('')}</div></div>`;
   });
-
-  if (!hasAny) {
-    html = `<div class="no-providers">No streaming options found in the US.</div>`;
-  }
-
-  const tmdbPath = item.media_type === 'movie' ? `movie/${item.id}` : `tv/${item.id}`;
-  const tmdbLink = us.link || `https://www.themoviedb.org/${tmdbPath}/watch?locale=US`;
-  html += `<a class="tmdb-link" href="${tmdbLink}" target="_blank">
+  if (!any) html = `<div class="nonefound">No streaming options in the US</div>`;
+  const link = us.link || `https://www.themoviedb.org/${item.media_type}/${item.id}/watch?locale=US`;
+  html += `<a class="jw-link" href="${link}" target="_blank">
     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-    View on TMDB
-  </a>`;
-
+    View on TMDB</a>`;
   section.innerHTML = html;
 }
 
-function escHtml(str) {
-  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 </script>
 </body>
