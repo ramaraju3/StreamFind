@@ -169,6 +169,9 @@ qi.addEventListener('keydown', e => { if (e.key === 'Enter') { qi.blur(); run();
 
 function run() { const v = qi.value.trim(); if (v) go(v); }
 
+const urlQ = new URLSearchParams(location.search).get('q');
+if (urlQ) { qi.value = urlQ; go(urlQ); }
+
 async function searchTMDB(q) {
   const r = await fetch(`${BASE}/search/multi?api_key=${K}&query=${encodeURIComponent(q)}&language=en-US&page=1&include_adult=false`);
   if (!r.ok) throw new Error(`API returned ${r.status}`);
