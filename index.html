@@ -223,14 +223,10 @@ function mkCard(item) {
 async function loadP(item, section) {
   try {
     const type = item.media_type === 'movie' ? 'movie' : 'tv';
-    const results = await Promise.allSettled([
-      fetch(`${BASE}/${type}/${item.id}/watch/providers?api_key=${K}&watch_region=US`),
-      fetch(`${BASE}/${type}/${item.id}/watch/providers?api_key=${K}&watch_region=IN`)
-    ]);
-    const usData = results[0].status === 'fulfilled' && results[0].value.ok ? await results[0].value.json() : null;
-    const inData = results[1].status === 'fulfilled' && results[1].value.ok ? await results[1].value.json() : null;
-    const combined = combineProviders(usData?.results?.US, inData?.results?.IN);
-    renderP(section, combined, item);
+    const r = await fetch(`${BASE}/${type}/${item.id}/watch/providers?api_key=${K}`);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const d = await r.json();
+    renderP(section, (d.results || {}).US, item);
   } catch(e) {
     section.innerHTML = `<div class="nonefound">Could not load streaming info</div>`;
   }
