@@ -272,7 +272,9 @@ function mkCard(item) {
       <div class="cmeta">
         <span class="bdg ${item.media_type}">${isM ? 'Movie' : 'TV'}</span>
         ${year ? `<span class="yr">${year}</span>` : ''}
+        <span class="imdb-slot"></span>
         ${tmdbRating}
+        <span class="rt-slot"></span>
       </div>
       ${ov ? `<div class="ov">${ov}</div>` : ''}
     </div>
@@ -310,9 +312,10 @@ async function loadRatings(item, card) {
     const omdb = await omdbRes.json();
     const imdbRating = omdb.imdbRating;
     const rtRating = omdb.Ratings?.find(r => r.Source === 'Rotten Tomatoes')?.Value;
-    const cmeta = card.querySelector('.cmeta');
-    if (imdbRating && imdbRating !== 'N/A') cmeta.insertAdjacentHTML('beforeend', `<span class="rating-imdb">IMDb ${imdbRating}</span>`);
-    if (rtRating) cmeta.insertAdjacentHTML('beforeend', `<span class="rating-rt">🍅 ${rtRating}</span>`);
+    const imdbSlot = card.querySelector('.imdb-slot');
+    const rtSlot = card.querySelector('.rt-slot');
+    if (imdbRating && imdbRating !== 'N/A') { imdbSlot.className = 'rating-imdb'; imdbSlot.textContent = `IMDb ${imdbRating}`; }
+    if (rtRating) { rtSlot.className = 'rating-rt'; rtSlot.innerHTML = `🍅 ${rtRating}`; }
   } catch(e) {}
 }
 
