@@ -128,6 +128,9 @@ input[type=text]:focus { border-color: rgba(123,111,255,0.5); background: var(--
 .song-name { font-size: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .song-artist { font-size: 11px; color: var(--mu); flex-shrink: 0; }
 .xlink { display: inline-flex; align-items: center; gap: 4px; margin-top: 8px; font-size: 11px; color: var(--pur); text-decoration: none; }
+.fashion-links { display: flex; gap: 8px; }
+.fashion-btn { flex: 1; text-align: center; padding: 8px; border-radius: 9px; background: var(--s2); border: 1px solid var(--bd); font-size: 12px; font-weight: 500; color: var(--tx); text-decoration: none; transition: border-color 0.15s; }
+.fashion-btn:active { border-color: var(--pur); }
 
 footer { padding: 16px 0 calc(var(--safe-bot) + 8px); text-align: center; font-size: 11px; color: var(--mu); }
 footer a { color: var(--mu); }
@@ -243,6 +246,7 @@ async function go(q) {
       loadRatings(item, card);
       loadBook(item, card);
       loadMusic(item, card);
+      loadFashion(item, card);
     });
   } catch(e) {
     out.innerHTML = `<div class="msg">⚠️ ${esc(e.message)}</div>`;
@@ -275,7 +279,8 @@ function mkCard(item) {
   </div>
   <div class="prov"><div class="pload"><span class="msp"></span>Checking streaming…</div></div>
   <div class="book-sec"></div>
-  <div class="music-sec"></div>`;
+  <div class="music-sec"></div>
+  <div class="fashion-sec"></div>`;
   return div;
 }
 
@@ -392,6 +397,18 @@ async function loadMusic(item, card) {
       ${albumHtml}${songsHtml}
     </div>`;
   }
+}
+
+function loadFashion(item, card) {
+  if (item.media_type !== 'tv') return;
+  const slug = toSlug(item.name);
+  card.querySelector('.fashion-sec').innerHTML = `<div class="xsec">
+    <div class="xsec-lbl">👗 Shop the look</div>
+    <div class="fashion-links">
+      <a class="fashion-btn" href="https://wornontv.net/shows/${slug}/" target="_blank">WornOnTV</a>
+      <a class="fashion-btn" href="https://www.shopyourtv.com/${slug}/" target="_blank">ShopYourTV</a>
+    </div>
+  </div>`;
 }
 
 function renderP(section, us, item) {
