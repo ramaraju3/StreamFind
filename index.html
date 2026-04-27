@@ -303,7 +303,7 @@ async function loadRatings(item, card) {
   const title = item.title || item.name;
   const type = item.media_type === 'movie' ? 'movie' : 'tv';
 
-  const [imdbResult, rtResult] = await Promise.allSettled([
+  const [omdbResult, rtApiResult] = await Promise.allSettled([
     (async () => {
       if (!OMDB_KEY) return null;
       const extRes = await fetch(`${BASE}/${type}/${item.id}/external_ids?api_key=${K}`);
@@ -312,8 +312,7 @@ async function loadRatings(item, card) {
       if (!ext.imdb_id) return null;
       const res = await fetch(`https://www.omdbapi.com/?i=${ext.imdb_id}&apikey=${OMDB_KEY}`);
       if (!res.ok) return null;
-      const d = await res.json();
-      return d.imdbRating && d.imdbRating !== 'N/A' ? d.imdbRating : null;
+      return await res.json();
     })(),
     (async () => {
       if (!RT_KEY) return null;
@@ -322,16 +321,21 @@ async function loadRatings(item, card) {
       });
       if (!res.ok) return null;
       const d = await res.json();
-      return d.tomatometer_score || null;
+      return d.tomatometer_score ? `${d.tomatometer_score}%` : null;
     })()
   ]);
 
+  const omdb = omdbResult.status === 'fulfilled' ? omdbResult.value : null;
+  const rapidRt = rtApiResult.status === 'fulfilled' ? rtApiResult.value : null;
+
+  const imdbRating = omdb?.imdbRating && omdb.imdbRating !== 'N/A' ? omdb.imdbRating : null;
+  const omdbRt = omdb?.Ratings?.find(r => r.Source === 'Rotten Tomatoes')?.Value;
+  const rtScore = omdbRt || rapidRt;
+
   const imdbSlot = card.querySelector('.imdb-slot');
   const rtSlot = card.querySelector('.rt-slot');
-  const imdbRating = imdbResult.status === 'fulfilled' ? imdbResult.value : null;
-  const rtScore = rtResult.status === 'fulfilled' ? rtResult.value : null;
   if (imdbRating) { imdbSlot.className = 'rating-imdb'; imdbSlot.textContent = `IMDb ${imdbRating}`; }
-  if (rtScore) { rtSlot.className = 'rating-rt'; rtSlot.innerHTML = `🍅 ${rtScore}%`; }
+  if (rtScore) { rtSlot.className = 'rating-rt'; rtSlot.innerHTML = `🍅 ${rtScore}`; }
 }
 
 function toSlug(title) {
