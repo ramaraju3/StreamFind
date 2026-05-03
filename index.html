@@ -131,6 +131,18 @@ input[type=text]:focus { border-color: rgba(123,111,255,0.5); background: var(--
 .fashion-links { display: flex; gap: 8px; }
 .fashion-btn { flex: 1; text-align: center; padding: 8px; border-radius: 9px; background: var(--s2); border: 1px solid var(--bd); font-size: 12px; font-weight: 500; color: var(--tx); text-decoration: none; transition: border-color 0.15s; }
 .fashion-btn:active { border-color: var(--pur); }
+.trailer-card { position: relative; width: 100%; aspect-ratio: 16 / 9; border: 1px solid var(--bd); border-radius: 10px; overflow: hidden; background: var(--s2); cursor: pointer; display: block; text-decoration: none; }
+.trailer-card img { width: 100%; height: 100%; display: block; object-fit: cover; border: 0; }
+.trailer-play {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(to top, rgba(0,0,0,0.55), transparent 55%);
+}
+.trailer-play span {
+  width: 48px; height: 48px; border-radius: 50%; background: var(--acc); color: var(--bg);
+  display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 800;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.3);
+}
+.trailer-name { margin-top: 7px; font-size: 12px; color: var(--mu); line-height: 1.35; }
 
 footer { padding: 16px 0 calc(var(--safe-bot) + 8px); text-align: center; font-size: 11px; color: var(--mu); }
 footer a { color: var(--mu); }
@@ -244,6 +256,7 @@ async function go(q) {
       out.appendChild(card);
       loadP(item, card.querySelector('.prov'));
       loadRatings(item, card);
+      loadTrailer(item, card);
       loadBook(item, card);
       loadMusic(item, card);
       loadFashion(item, card);
@@ -280,6 +293,7 @@ function mkCard(item) {
     </div>
   </div>
   <div class="prov"><div class="pload"><span class="msp"></span>Checking streaming…</div></div>
+  <div class="trailer-sec"></div>
   <div class="book-sec"></div>
   <div class="music-sec"></div>
   <div class="fashion-sec"></div>`;
@@ -315,6 +329,53 @@ async function loadRatings(item, card) {
     if (imdbRating) { imdbSlot.className = 'rating-imdb'; imdbSlot.textContent = `IMDb ${imdbRating}`; }
     if (rtScore) { rtSlot.className = 'rating-rt'; rtSlot.innerHTML = `🍅 ${rtScore}`; }
   } catch(e) {}
+}
+
+async function loadTrailer(item, card) {
+  const type = item.media_type === 'movie' ? 'movie' : 'tv';
+  try {
+    let videos = await fetchVideos(type, item.id, '&language=en-US');
+    if (!videos.length) videos = await fetchVideos(type, item.id, '');
+    const trailer = pickTrailer(videos);
+    if (!trailer) return;
+    renderTrailer(card.querySelector('.trailer-sec'), trailer);
+  } catch(e) {}
+}
+
+async function fetchVideos(type, id, query = '') {
+  const r = await fetch(`${BASE}/${type}/${id}/videos?api_key=${K}${query}`);
+  if (!r.ok) return [];
+  const d = await r.json();
+  return (d.results || []).filter(v => v.site === 'YouTube' && /^[a-zA-Z0-9_-]+$/.test(v.key || ''));
+}
+
+function pickTrailer(videos) {
+  const score = v => {
+    let n = 0;
+    if (v.official) n += 20;
+    if (v.type === 'Trailer') n += 15;
+    if (v.type === 'Teaser') n += 8;
+    if (v.iso_3166_1 === 'US') n += 4;
+    if (v.iso_639_1 === 'en') n += 3;
+    if (/official trailer/i.test(v.name || '')) n += 5;
+    return n;
+  };
+  return [...videos].sort((a, b) =>
+    score(b) - score(a) || new Date(b.published_at || 0) - new Date(a.published_at || 0)
+  )[0];
+}
+
+function renderTrailer(section, trailer) {
+  const id = trailer.key;
+  section.innerHTML = `<div class="xsec">
+    <div class="xsec-lbl">Trailer</div>
+    <a class="trailer-card" href="https://www.youtube.com/watch?v=${id}" target="_blank" aria-label="Watch trailer on YouTube: ${esc(trailer.name)}">
+      <img src="https://img.youtube.com/vi/${id}/hqdefault.jpg" alt="${esc(trailer.name)}" loading="lazy">
+      <span class="trailer-play" aria-hidden="true"><span>▶</span></span>
+    </a>
+    <div class="trailer-name">${esc(trailer.name)}</div>
+    <a class="xlink" href="https://www.youtube.com/watch?v=${id}" target="_blank">Watch on YouTube →</a>
+  </div>`;
 }
 
 function toSlug(title) {
