@@ -131,7 +131,7 @@ input[type=text]:focus { border-color: rgba(123,111,255,0.5); background: var(--
 .fashion-links { display: flex; gap: 8px; }
 .fashion-btn { flex: 1; text-align: center; padding: 8px; border-radius: 9px; background: var(--s2); border: 1px solid var(--bd); font-size: 12px; font-weight: 500; color: var(--tx); text-decoration: none; transition: border-color 0.15s; }
 .fashion-btn:active { border-color: var(--pur); }
-.trailer-card { position: relative; width: 100%; aspect-ratio: 16 / 9; border: 1px solid var(--bd); border-radius: 10px; overflow: hidden; background: var(--s2); cursor: pointer; display: block; text-decoration: none; }
+.trailer-card { position: relative; width: 100%; aspect-ratio: 16 / 9; border: 1px solid var(--bd); border-radius: 10px; overflow: hidden; background: var(--s2); cursor: pointer; display: block; text-decoration: none; padding: 0; }
 .trailer-card img { width: 100%; height: 100%; display: block; object-fit: cover; border: 0; }
 .trailer-play {
   position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
@@ -143,6 +143,13 @@ input[type=text]:focus { border-color: rgba(123,111,255,0.5); background: var(--
   box-shadow: 0 10px 24px rgba(0,0,0,0.3);
 }
 .trailer-name { margin-top: 7px; font-size: 12px; color: var(--mu); line-height: 1.35; }
+
+.tmodal { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 16px; }
+.tmodal-bg { position: absolute; inset: 0; background: rgba(0,0,0,0.88); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+.tmodal-box { position: relative; width: 100%; max-width: 480px; background: var(--s1); border: 1px solid var(--bd); border-radius: 16px; overflow: hidden; box-shadow: 0 24px 60px rgba(0,0,0,0.6); }
+.tmodal-close { position: absolute; top: 10px; right: 10px; z-index: 2; width: 32px; height: 32px; border-radius: 50%; background: rgba(0,0,0,0.65); border: 1px solid var(--bd); color: var(--tx); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1; }
+.tmodal-frame { position: relative; width: 100%; aspect-ratio: 16 / 9; }
+.tmodal-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
 
 footer { padding: 16px 0 calc(var(--safe-bot) + 8px); text-align: center; font-size: 11px; color: var(--mu); }
 footer a { color: var(--mu); }
@@ -173,6 +180,16 @@ footer a { color: var(--mu); }
   <div id="out"><div class="msg">Search for a movie or TV show</div></div>
 
   <footer>Data from <a href="https://www.themoviedb.org" target="_blank">TMDB</a> · Streaming info by JustWatch</footer>
+</div>
+
+<div id="trailer-modal" class="tmodal" style="display:none" role="dialog" aria-modal="true" aria-label="Trailer">
+  <div class="tmodal-bg" onclick="closeTrailer()"></div>
+  <div class="tmodal-box">
+    <button class="tmodal-close" onclick="closeTrailer()" aria-label="Close">✕</button>
+    <div class="tmodal-frame">
+      <iframe id="trailer-iframe" allowfullscreen allow="autoplay; encrypted-media; picture-in-picture"></iframe>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -369,14 +386,29 @@ function renderTrailer(section, trailer) {
   const id = trailer.key;
   section.innerHTML = `<div class="xsec">
     <div class="xsec-lbl">Trailer</div>
-    <a class="trailer-card" href="https://www.youtube.com/watch?v=${id}" target="_blank" aria-label="Watch trailer on YouTube: ${esc(trailer.name)}">
+    <button class="trailer-card" onclick="openTrailer('${id}')" aria-label="Play trailer: ${esc(trailer.name)}">
       <img src="https://img.youtube.com/vi/${id}/hqdefault.jpg" alt="${esc(trailer.name)}" loading="lazy">
       <span class="trailer-play" aria-hidden="true"><span>▶</span></span>
-    </a>
+    </button>
     <div class="trailer-name">${esc(trailer.name)}</div>
-    <a class="xlink" href="https://www.youtube.com/watch?v=${id}" target="_blank">Watch on YouTube →</a>
   </div>`;
 }
+
+function openTrailer(id) {
+  const modal = document.getElementById('trailer-modal');
+  document.getElementById('trailer-iframe').src = `https://www.youtube.com/embed/${id}?autoplay=1&rel=0`;
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeTrailer() {
+  const modal = document.getElementById('trailer-modal');
+  document.getElementById('trailer-iframe').src = '';
+  modal.style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeTrailer(); });
 
 function toSlug(title) {
   return title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
