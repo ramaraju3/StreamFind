@@ -493,16 +493,25 @@ async function loadMusic(item, card) {
     `${title} soundtrack`,
   ].filter(Boolean);
 
+  const norm = s => s.toLowerCase().replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+  function titleMatch(collectionName) {
+    const an = norm(collectionName), tn = norm(title);
+    if (an.includes(tn)) return true;
+    const words = tn.split(' ').filter(w => w.length >= 2);
+    return words.length > 0 && words.every(w => an.includes(w));
+  }
+
   let album = null;
   for (const term of searches) {
     try {
       const r = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(term)}&media=music&entity=album&limit=10`);
       if (!r.ok) continue;
       const d = await r.json();
-      album = (d.results || []).find(a =>
-        /soundtrack|original score|original motion picture|ost\b/i.test(a.collectionName) ||
-        (composer && a.artistName.toLowerCase().includes(composer.split(' ')[0].toLowerCase()))
-      );
+      album = (d.results || []).find(a => {
+        const isOST = /soundtrack|original score|original motion picture|ost\b/i.test(a.collectionName);
+        const composerMatch = composer && a.artistName.toLowerCase().includes(composer.split(' ')[0].toLowerCase());
+        return (isOST || composerMatch) && titleMatch(a.collectionName);
+      });
       if (album) break;
     } catch(e) {}
   }
