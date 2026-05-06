@@ -4,7 +4,7 @@
 
 A fast, mobile-first web app that tells you where to stream a movie or TV show, with ratings, soundtrack info, and book adaptation details — all in one place.
 
-Live: [ramaraju3.github.io/streamfind](https://ramaraju3.github.io/streamfind/)
+Live: [ramaraju3.github.io/StreamFind](https://ramaraju3.github.io/StreamFind/)
 
 ---
 
