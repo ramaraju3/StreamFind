@@ -494,10 +494,11 @@ async function loadMusic(item, card) {
   ].filter(Boolean);
 
   const norm = s => s.toLowerCase().replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+  const STOP = new Set(['a','an','the','of','in','to','and','or','for','on','at','by','from']);
   function titleMatch(collectionName) {
     const an = norm(collectionName), tn = norm(title);
     if (an.includes(tn)) return true;
-    const words = tn.split(' ').filter(w => w.length >= 2);
+    const words = tn.split(' ').filter(w => w.length >= 1 && !STOP.has(w));
     return words.length > 0 && words.every(w => an.includes(w));
   }
 
