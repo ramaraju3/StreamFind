@@ -128,6 +128,22 @@ input[type=text]:focus { border-color: rgba(123,111,255,0.5); background: var(--
 .song-name { font-size: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .song-artist { font-size: 11px; color: var(--mu); flex-shrink: 0; }
 .xlink { display: inline-flex; align-items: center; gap: 4px; margin-top: 8px; font-size: 11px; color: var(--pur); text-decoration: none; }
+.music-platform-links { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 7px; }
+.platform-btn { font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 6px; text-decoration: none; border: 1px solid; transition: opacity 0.15s; }
+.platform-btn:active { opacity: 0.7; }
+.platform-btn.apple { color: #fc3c44; border-color: rgba(252,60,68,0.3); background: rgba(252,60,68,0.08); }
+.platform-btn.spotify { color: #1db954; border-color: rgba(29,185,84,0.3); background: rgba(29,185,84,0.08); }
+.platform-btn.ytmusic { color: #ff4444; border-color: rgba(255,68,68,0.3); background: rgba(255,68,68,0.08); }
+.track-list { margin-top: 10px; display: flex; flex-direction: column; }
+.track-row { display: flex; align-items: center; gap: 7px; padding: 6px 0; border-bottom: 1px solid var(--bd); }
+.track-row:last-child { border-bottom: none; }
+.track-num { font-size: 10px; color: var(--mu); width: 16px; text-align: right; flex-shrink: 0; }
+.track-name { font-size: 12px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.track-dur { font-size: 10px; color: var(--mu); flex-shrink: 0; }
+.track-preview { width: 22px; height: 22px; border-radius: 50%; background: var(--s2); border: 1px solid var(--bd); cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 8px; color: var(--tx); transition: background 0.15s, transform 0.1s; padding: 0; }
+.track-preview:active { transform: scale(0.88); }
+.track-preview.playing { background: var(--acc); color: var(--bg); border-color: var(--acc); }
+.ost-type { font-size: 10px; color: var(--mu); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 2px; }
 .fashion-links { display: flex; gap: 8px; }
 .fashion-btn { flex: 1; text-align: center; padding: 8px; border-radius: 9px; background: var(--s2); border: 1px solid var(--bd); font-size: 12px; font-weight: 500; color: var(--tx); text-decoration: none; transition: border-color 0.15s; }
 .fashion-btn:active { border-color: var(--pur); }
@@ -198,9 +214,8 @@ const BASE = 'https://api.themoviedb.org/3';
 const IB = 'https://image.tmdb.org/t/p/w154';
 const LB = 'https://image.tmdb.org/t/p/w45';
 const OMDB_KEY = '777a3eb6';
-const TUNEFIND_USER = 'your_tunefind_user';
-const TUNEFIND_PASS = 'your_tunefind_pass';
 let ftype = 'all', lastQ = '';
+let _audioEl = null, _audioBtn = null;
 
 const qi = document.getElementById('q');
 const out = document.getElementById('out');
@@ -439,58 +454,112 @@ async function loadBook(item, card) {
   } catch(e) {}
 }
 
+function playPreview(url, btn) {
+  if (_audioEl) {
+    _audioEl.pause();
+    _audioEl = null;
+    if (_audioBtn) { _audioBtn.innerHTML = '▶'; _audioBtn.classList.remove('playing'); }
+    if (_audioBtn === btn) { _audioBtn = null; return; }
+  }
+  _audioBtn = btn;
+  _audioEl = new Audio(url);
+  _audioEl.volume = 0.75;
+  _audioEl.play();
+  btn.innerHTML = '⏸'; btn.classList.add('playing');
+  _audioEl.onended = () => {
+    btn.innerHTML = '▶'; btn.classList.remove('playing');
+    _audioEl = null; _audioBtn = null;
+  };
+}
+
 async function loadMusic(item, card) {
   const title = item.title || item.name;
-  const slug = toSlug(title);
-  const type = item.media_type === 'movie' ? 'movie' : 'show';
-  let albumHtml = '', songsHtml = '';
+  const type = item.media_type === 'movie' ? 'movie' : 'tv';
 
+  let composer = '';
   try {
-    const r = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(title + ' soundtrack')}&media=music&entity=album&limit=5`);
-    if (r.ok) {
-      const d = await r.json();
-      const album = (d.results || []).find(a => /soundtrack|original score|original motion picture/i.test(a.collectionName));
-      if (album) {
-        const art = album.artworkUrl100.replace('100x100bb', '160x160bb');
-        albumHtml = `<div class="album-row">
-          <img class="album-art" src="${art}" loading="lazy">
-          <div>
-            <div class="album-name">${esc(album.collectionName)}</div>
-            <div class="album-artist">${esc(album.artistName)}</div>
-            <a class="xlink" href="${album.collectionViewUrl}" target="_blank">Listen on Apple Music →</a>
-          </div>
-        </div>`;
-      }
+    const cr = await fetch(`${BASE}/${type}/${item.id}/credits?api_key=${K}`);
+    if (cr.ok) {
+      const cd = await cr.json();
+      const c = (cd.crew || []).find(x => /music composer|original music|score composer/i.test(x.job));
+      if (c) composer = c.name;
     }
   } catch(e) {}
 
-  if (TUNEFIND_USER && TUNEFIND_USER !== 'your_tunefind_user') {
+  const searches = [
+    `${title} original soundtrack`,
+    `${title} original score`,
+    composer ? `${composer} ${title}` : null,
+    `${title} soundtrack`,
+  ].filter(Boolean);
+
+  let album = null;
+  for (const term of searches) {
     try {
-      const creds = btoa(`${TUNEFIND_USER}:${TUNEFIND_PASS}`);
-      const r = await fetch(`https://www.tunefind.com/api/v1/${type}/${slug}`, {
-        headers: { 'Authorization': `Basic ${creds}` }
-      });
-      if (r.ok) {
-        const d = await r.json();
-        const songs = (d.song_instances || []).slice(0, 5);
-        if (songs.length) {
-          songsHtml = `<div class="xsec-lbl" style="margin-top:10px">🎬 Featured in scenes</div>
-            <div class="song-list">${songs.map(s => `<div class="song-row">
-              <span class="song-name">${esc(s.song?.name || '')}</span>
-              <span class="song-artist">${esc(s.song?.artist?.name || '')}</span>
-            </div>`).join('')}</div>
-            <a class="xlink" href="https://www.tunefind.com/${type}/${slug}" target="_blank">All songs on TuneFind →</a>`;
-        }
-      }
+      const r = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(term)}&media=music&entity=album&limit=10`);
+      if (!r.ok) continue;
+      const d = await r.json();
+      album = (d.results || []).find(a =>
+        /soundtrack|original score|original motion picture|ost\b/i.test(a.collectionName) ||
+        (composer && a.artistName.toLowerCase().includes(composer.split(' ')[0].toLowerCase()))
+      );
+      if (album) break;
     } catch(e) {}
   }
+  if (!album) return;
 
-  if (albumHtml || songsHtml) {
-    card.querySelector('.music-sec').innerHTML = `<div class="xsec">
-      <div class="xsec-lbl">🎵 Soundtrack</div>
-      ${albumHtml}${songsHtml}
-    </div>`;
+  let tracks = [];
+  try {
+    const r = await fetch(`https://itunes.apple.com/lookup?id=${album.collectionId}&entity=song&limit=20`);
+    if (r.ok) {
+      const d = await r.json();
+      tracks = (d.results || []).filter(t => t.wrapperType === 'track').slice(0, 12);
+    }
+  } catch(e) {}
+
+  const art = album.artworkUrl100.replace('100x100bb', '200x200bb');
+  const spotifyUrl = `https://open.spotify.com/search/${encodeURIComponent(album.collectionName + ' ' + album.artistName)}`;
+  const ytUrl = `https://music.youtube.com/search?q=${encodeURIComponent(title + ' soundtrack')}`;
+  const ytRegUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(title + ' official soundtrack')}`;
+
+  const isScore = /score/i.test(album.collectionName) && !/soundtrack/i.test(album.collectionName);
+  const ostLabel = isScore ? 'Original Score' : 'Soundtrack / OST';
+
+  let tracksHtml = '';
+  if (tracks.length) {
+    tracksHtml = `<div class="track-list">${tracks.map((t, i) => {
+      const ms = t.trackTimeMillis || 0;
+      const dur = ms ? `${Math.floor(ms/60000)}:${String(Math.floor((ms%60000)/1000)).padStart(2,'0')}` : '';
+      const previewBtn = t.previewUrl
+        ? `<button class="track-preview" onclick="playPreview('${t.previewUrl.replace(/'/g,"\\'")}',this)" title="30s preview">▶</button>`
+        : `<span style="width:22px;flex-shrink:0"></span>`;
+      return `<div class="track-row">
+        <span class="track-num">${t.trackNumber || i+1}</span>
+        ${previewBtn}
+        <span class="track-name" title="${esc(t.trackName)}">${esc(t.trackName)}</span>
+        ${dur ? `<span class="track-dur">${dur}</span>` : ''}
+      </div>`;
+    }).join('')}</div>`;
   }
+
+  card.querySelector('.music-sec').innerHTML = `<div class="xsec">
+    <div class="xsec-lbl">🎵 ${ostLabel}</div>
+    <div class="album-row">
+      <img class="album-art" src="${art}" loading="lazy">
+      <div style="flex:1;min-width:0">
+        <div class="album-name">${esc(album.collectionName)}</div>
+        <div class="album-artist">${esc(album.artistName)}</div>
+        ${composer ? `<div class="ost-type">Composer: ${esc(composer)}</div>` : ''}
+        <div class="music-platform-links">
+          <a class="platform-btn apple" href="${album.collectionViewUrl}" target="_blank">Apple Music</a>
+          <a class="platform-btn spotify" href="${spotifyUrl}" target="_blank">Spotify</a>
+          <a class="platform-btn ytmusic" href="${ytUrl}" target="_blank">YT Music</a>
+          <a class="platform-btn ytmusic" href="${ytRegUrl}" target="_blank">YouTube</a>
+        </div>
+      </div>
+    </div>
+    ${tracksHtml}
+  </div>`;
 }
 
 function loadFashion(item, card) {
