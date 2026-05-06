@@ -270,8 +270,9 @@ function run() { const v = qi.value.trim(); if (v) go(v); }
 const urlQ = new URLSearchParams(location.search).get('q');
 if (urlQ) { qi.value = urlQ; go(urlQ); }
 
-async function searchTMDB(q) {
-  const r = await fetch(`${BASE}/search/multi?api_key=${K}&query=${encodeURIComponent(q)}&language=en-US&page=1&include_adult=false`);
+async function searchTMDB(q, lang = 'en-US') {
+  const lp = lang ? `&language=${lang}` : '';
+  const r = await fetch(`${BASE}/search/multi?api_key=${K}&query=${encodeURIComponent(q)}${lp}&page=1&include_adult=false`);
   if (!r.ok) throw new Error(`API returned ${r.status}`);
   const d = await r.json();
   let res = (d.results || []).filter(x => x.media_type === 'movie' || x.media_type === 'tv');
@@ -284,16 +285,23 @@ function buildFallbackQueries(q) {
   const queries = new Set();
   words.forEach(w => queries.add(w));
   words.forEach((word, wi) => {
+    // Adjacent transpositions
     for (let i = 0; i < word.length - 1; i++) {
-      const fixed = word.slice(0, i) + word[i + 1] + word[i] + word.slice(i + 2);
-      if (fixed !== word) {
-        const newWords = [...words];
-        newWords[wi] = fixed;
-        queries.add(newWords.join(' '));
-      }
+      const s = word.slice(0, i) + word[i+1] + word[i] + word.slice(i+2);
+      if (s !== word) { const nw = [...words]; nw[wi] = s; queries.add(nw.join(' ')); }
+    }
+    // Single-character deletions (catches extra/wrong letters)
+    for (let i = 0; i < word.length; i++) {
+      const s = word.slice(0, i) + word.slice(i+1);
+      if (s.length >= 3) { const nw = [...words]; nw[wi] = s; queries.add(nw.join(' ')); }
+    }
+    // Collapse repeated consecutive chars: baahubali → bahubali
+    const collapsed = word.replace(/(.)\1+/g, '$1');
+    if (collapsed !== word && collapsed.length >= 3) {
+      const nw = [...words]; nw[wi] = collapsed; queries.add(nw.join(' '));
     }
   });
-  return [...queries].slice(0, 10);
+  return [...queries].slice(0, 15);
 }
 
 async function go(q) {
@@ -301,10 +309,12 @@ async function go(q) {
   out.innerHTML = '<div class="msg"><span class="sp"></span>Searching…</div>';
   try {
     let res = await searchTMDB(q);
+    // Retry without language filter — helps non-English titles like Baahubali
+    if (!res.length) res = await searchTMDB(q, '');
     if (!res.length) {
       const fallbacks = buildFallbackQueries(q);
       if (fallbacks.length) {
-        const allResults = await Promise.all(fallbacks.map(fq => searchTMDB(fq)));
+        const allResults = await Promise.all(fallbacks.map(fq => searchTMDB(fq, '')));
         const counts = {};
         allResults.flat().forEach(x => counts[x.id] = (counts[x.id] || 0) + 1);
         const seen = new Set();
