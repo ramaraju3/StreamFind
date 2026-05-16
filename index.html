@@ -6,64 +6,104 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="StreamFind">
-<meta name="theme-color" content="#0a0a0f">
+<meta name="theme-color" content="#090b14">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <title>StreamFind</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500;700;800&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #0a0a0f;
-  --s1: #13131a;
-  --s2: #1c1c27;
-  --bd: rgba(255,255,255,0.07);
-  --acc: #e8ff47;
-  --pur: #7b6fff;
-  --tx: #f0f0f5;
-  --mu: #6b6b80;
+  --bg: #090b14;
+  --s1: rgba(18,22,36,0.82);
+  --s2: rgba(255,255,255,0.08);
+  --s3: rgba(255,255,255,0.12);
+  --bd: rgba(255,255,255,0.13);
+  --acc: #45f0b4;
+  --hot: #ff5e8a;
+  --sun: #ffd166;
+  --sky: #54c6ff;
+  --pur: #8b6cff;
+  --tx: #f7f8ff;
+  --mu: #a5abc2;
+  --shadow: 0 18px 50px rgba(0,0,0,0.34);
   --safe-top: env(safe-area-inset-top, 44px);
   --safe-bot: env(safe-area-inset-bottom, 20px);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-html, body { height: 100%; background: var(--bg); color: var(--tx); font-family: 'DM Sans', sans-serif; overflow-x: hidden; }
+html, body { min-height: 100%; background: var(--bg); color: var(--tx); font-family: 'DM Sans', sans-serif; overflow-x: hidden; }
+body {
+  background:
+    linear-gradient(145deg, rgba(255,94,138,0.24), transparent 28%),
+    linear-gradient(215deg, rgba(84,198,255,0.22), transparent 34%),
+    linear-gradient(315deg, rgba(69,240,180,0.16), transparent 36%),
+    var(--bg);
+}
 body::before {
-  content: ''; position: fixed; top: -30%; left: -20%; width: 70%; height: 70%;
-  background: radial-gradient(circle, rgba(123,111,255,0.12) 0%, transparent 70%);
+  content: ''; position: fixed; inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
+  background-size: 42px 42px;
+  mask-image: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent 72%);
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent 72%);
   pointer-events: none; z-index: 0;
 }
-.app { position: relative; z-index: 1; max-width: 720px; margin: 0 auto; padding: 0 18px; display: flex; flex-direction: column; min-height: 100dvh; }
-header { padding-top: calc(var(--safe-top) + 12px); padding-bottom: 20px; }
-.logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 28px; letter-spacing: -0.5px; }
-.logo span { color: var(--acc); }
-.logo-sub { font-size: 11px; color: var(--mu); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 3px; }
+.app { position: relative; z-index: 1; width: min(100%, 1120px); margin: 0 auto; padding: 0 22px; display: flex; flex-direction: column; min-height: 100dvh; }
+header { padding-top: calc(var(--safe-top) + 18px); padding-bottom: 22px; }
+.brand-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; }
+.logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: clamp(34px, 9vw, 64px); line-height: 0.92; letter-spacing: 0; max-width: 10ch; }
+.logo span {
+  color: transparent;
+  background: linear-gradient(110deg, var(--acc), var(--sky) 45%, var(--hot));
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+.logo-sub { max-width: 520px; font-size: clamp(14px, 3.6vw, 18px); color: var(--mu); line-height: 1.5; margin-top: 14px; }
+.pulse-badge {
+  flex-shrink: 0; color: var(--bg); background: linear-gradient(135deg, var(--sun), var(--acc));
+  border: 0; border-radius: 999px; padding: 8px 12px; font-size: 11px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.08em; box-shadow: 0 14px 30px rgba(69,240,180,0.18);
+}
 
-.search-wrap { position: relative; margin-bottom: 10px; }
+.search-wrap {
+  position: sticky; top: max(10px, env(safe-area-inset-top, 10px)); z-index: 10;
+  margin-bottom: 12px; padding: 8px; border: 1px solid var(--bd); border-radius: 22px;
+  background: rgba(12,15,26,0.74); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+  box-shadow: var(--shadow);
+}
 input[type=text] {
-  width: 100%; background: var(--s1); border: 1px solid var(--bd);
-  border-radius: 14px; padding: 15px 50px 15px 16px;
+  width: 100%; background: transparent; border: 0;
+  border-radius: 16px; padding: 16px 56px 16px 16px;
   font-size: 16px; font-family: 'DM Sans', sans-serif; color: var(--tx);
   outline: none; -webkit-appearance: none; transition: border-color 0.2s;
 }
 input[type=text]::placeholder { color: var(--mu); }
-input[type=text]:focus { border-color: rgba(123,111,255,0.5); background: var(--s2); }
+input[type=text]:focus { background: rgba(255,255,255,0.04); }
 .go {
-  position: absolute; right: 7px; top: 50%; transform: translateY(-50%);
-  width: 36px; height: 36px; border-radius: 9px; background: var(--acc);
+  position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+  width: 42px; height: 42px; border-radius: 14px; background: linear-gradient(135deg, var(--acc), var(--sky));
   border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
-  transition: transform 0.15s, opacity 0.15s;
+  transition: transform 0.15s, opacity 0.15s; box-shadow: 0 12px 24px rgba(84,198,255,0.22);
 }
 .go:active { transform: translateY(-50%) scale(0.9); opacity: 0.8; }
 .go svg { width: 15px; height: 15px; }
 
-.filters { display: flex; gap: 7px; margin-bottom: 20px; }
-.fb {
-  flex: 1; padding: 9px; border-radius: 10px; border: 1px solid var(--bd);
-  background: var(--s1); color: var(--mu); font-family: 'DM Sans', sans-serif;
-  font-size: 13px; cursor: pointer; transition: all 0.15s; text-align: center;
+.filters {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 22px;
+  padding: 5px; background: rgba(255,255,255,0.07); border: 1px solid var(--bd); border-radius: 16px;
 }
-.fb.on { background: var(--pur); border-color: var(--pur); color: #fff; font-weight: 500; }
+.fb {
+  padding: 10px 8px; border-radius: 12px; border: 0;
+  background: transparent; color: var(--mu); font-family: 'DM Sans', sans-serif;
+  font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s; text-align: center;
+}
+.fb.on { background: var(--tx); color: var(--bg); box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
 
-#out { flex: 1; }
+#out { flex: 1; display: grid; gap: 14px; }
 
-.msg { font-size: 14px; color: var(--mu); text-align: center; padding: 3rem 0; }
+.msg {
+  font-size: 14px; color: var(--mu); text-align: center; padding: 3.5rem 1rem;
+  border: 1px dashed var(--bd); border-radius: 22px; background: rgba(255,255,255,0.05);
+}
 .sp {
   display: inline-block; width: 18px; height: 18px; border-radius: 50%;
   border: 2px solid rgba(255,255,255,0.1); border-top-color: var(--acc);
@@ -72,31 +112,37 @@ input[type=text]:focus { border-color: rgba(123,111,255,0.5); background: var(--
 @keyframes spin { to { transform: rotate(360deg); } }
 
 .card {
-  background: var(--s1); border: 1px solid var(--bd); border-radius: 18px;
-  overflow: hidden; margin-bottom: 10px;
+  position: relative; background: var(--s1); border: 1px solid var(--bd); border-radius: 24px;
+  overflow: hidden; box-shadow: var(--shadow);
+  backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
   animation: up 0.3s ease both;
+}
+.card::before {
+  content: ''; position: absolute; inset: 0 0 auto 0; height: 5px;
+  background: linear-gradient(90deg, var(--hot), var(--sun), var(--acc), var(--sky), var(--pur));
 }
 @keyframes up { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
 .card:nth-child(2) { animation-delay: 0.05s; }
 .card:nth-child(3) { animation-delay: 0.1s; }
 .card:nth-child(4) { animation-delay: 0.15s; }
 
-.ctop { display: flex; gap: 14px; padding: 16px; align-items: flex-start; }
-.poster { width: 72px; height: 108px; border-radius: 10px; object-fit: cover; background: var(--s2); flex-shrink: 0; border: 1px solid var(--bd); }
-.poster-ph { width: 72px; height: 108px; border-radius: 10px; background: var(--s2); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 28px; border: 1px solid var(--bd); }
+.ctop { display: flex; gap: 16px; padding: 18px; align-items: flex-start; }
+.poster { width: 82px; height: 123px; border-radius: 16px; object-fit: cover; background: var(--s2); flex-shrink: 0; border: 1px solid var(--bd); box-shadow: 0 14px 28px rgba(0,0,0,0.28); }
+.poster-ph { width: 82px; height: 123px; border-radius: 16px; background: var(--s2); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 30px; border: 1px solid var(--bd); }
 .cinfo { flex: 1; min-width: 0; }
-.ctitle { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 16px; line-height: 1.25; margin-bottom: 6px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.cmeta { display: flex; align-items: center; gap: 6px; margin-bottom: 7px; flex-wrap: wrap; }
-.bdg { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; padding: 2px 7px; border-radius: 5px; }
-.bdg.movie { color: var(--acc); background: rgba(232,255,71,0.08); border: 1px solid rgba(232,255,71,0.2); }
-.bdg.tv { color: var(--pur); background: rgba(123,111,255,0.1); border: 1px solid rgba(123,111,255,0.25); }
+.ctitle { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 18px; line-height: 1.2; margin-bottom: 8px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.cmeta { display: flex; align-items: center; gap: 7px; margin-bottom: 9px; flex-wrap: wrap; }
+.bdg { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; padding: 4px 8px; border-radius: 999px; }
+.bdg.movie { color: #08120f; background: linear-gradient(135deg, var(--acc), var(--sun)); border: 0; }
+.bdg.tv { color: #fff; background: linear-gradient(135deg, var(--pur), var(--hot)); border: 0; }
 .yr { font-size: 12px; color: var(--mu); }
-.rating { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 600; color: var(--acc); background: rgba(232,255,71,0.08); border: 1px solid rgba(232,255,71,0.2); border-radius: 5px; padding: 2px 6px; }
-.rating-imdb { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 600; color: #f5c518; background: rgba(245,197,24,0.08); border: 1px solid rgba(245,197,24,0.25); border-radius: 5px; padding: 2px 6px; }
-.rating-rt { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 600; color: #fa320a; background: rgba(250,50,10,0.08); border: 1px solid rgba(250,50,10,0.25); border-radius: 5px; padding: 2px 6px; }
+.rating { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 800; color: var(--acc); background: rgba(69,240,180,0.1); border: 1px solid rgba(69,240,180,0.28); border-radius: 999px; padding: 4px 8px; text-decoration: none; transition: border-color 0.15s, background 0.15s; }
+.rating-imdb { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 800; color: #f5c518; background: rgba(245,197,24,0.1); border: 1px solid rgba(245,197,24,0.28); border-radius: 999px; padding: 4px 8px; text-decoration: none; transition: border-color 0.15s, background 0.15s; }
+.rating-rt { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 800; color: #ff6b4a; background: rgba(255,107,74,0.1); border: 1px solid rgba(255,107,74,0.28); border-radius: 999px; padding: 4px 8px; text-decoration: none; transition: border-color 0.15s, background 0.15s; }
+.rating:hover, .rating-imdb:hover, .rating-rt:hover { border-color: rgba(84,198,255,0.45); background: rgba(84,198,255,0.1); }
 .ov { font-size: 13px; color: var(--mu); line-height: 1.55; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; margin-top: 2px; }
 
-.prov { border-top: 1px solid var(--bd); padding: 12px 14px; }
+.prov { border-top: 1px solid var(--bd); padding: 14px 16px; background: rgba(255,255,255,0.035); }
 .pload { font-size: 12px; color: var(--mu); display: flex; align-items: center; gap: 6px; }
 .msp { width: 12px; height: 12px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,0.1); border-top-color: var(--pur); animation: spin 0.7s linear infinite; flex-shrink: 0; }
 
@@ -108,19 +154,25 @@ input[type=text]:focus { border-color: rgba(123,111,255,0.5); background: var(--
 .dot.y { background: #facc15; }
 .dot.p { background: var(--pur); }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.chip { display: flex; align-items: center; gap: 5px; background: var(--s2); border: 1px solid var(--bd); border-radius: 7px; padding: 4px 9px 4px 4px; font-size: 12px; color: var(--tx); }
-.plogo { width: 22px; height: 22px; border-radius: 5px; object-fit: cover; }
+.chip { display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.08); border: 1px solid var(--bd); border-radius: 999px; padding: 5px 10px 5px 5px; font-size: 12px; font-weight: 700; color: var(--tx); text-decoration: none; transition: transform 0.15s, border-color 0.15s, background 0.15s; }
+.chip:active { transform: scale(0.96); }
+.chip:hover { border-color: rgba(84,198,255,0.45); background: rgba(84,198,255,0.1); }
+.plogo { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; }
 .nonefound { font-size: 13px; color: var(--mu); font-style: italic; }
-.jw-link { display: inline-flex; align-items: center; gap: 4px; margin-top: 9px; font-size: 11px; color: var(--mu); text-decoration: none; border: 1px solid var(--bd); border-radius: 6px; padding: 3px 8px; }
+.jw-link { display: inline-flex; align-items: center; gap: 4px; margin-top: 9px; font-size: 11px; color: var(--mu); text-decoration: none; border: 1px solid var(--bd); border-radius: 999px; padding: 4px 10px; }
 
-.xsec { border-top: 1px solid var(--bd); padding: 12px 14px; }
-.xsec-lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--mu); margin-bottom: 8px; }
+.xsec { border-top: 1px solid var(--bd); padding: 14px 16px; }
+.xsec-lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--mu); margin-bottom: 9px; font-weight: 800; }
+.cast-list { display: grid; gap: 8px; }
+.cast-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; align-items: baseline; }
+.cast-name { font-size: 13px; font-weight: 800; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cast-character { font-size: 12px; color: var(--mu); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: right; }
 .book-row { display: flex; gap: 10px; align-items: flex-start; }
 .book-thumb { width: 36px; height: 54px; border-radius: 5px; object-fit: cover; flex-shrink: 0; border: 1px solid var(--bd); background: var(--s2); }
 .book-title { font-size: 13px; font-weight: 500; margin-bottom: 2px; line-height: 1.3; }
 .book-author { font-size: 11px; color: var(--mu); margin-bottom: 6px; }
 .album-row { display: flex; gap: 10px; align-items: center; margin-bottom: 4px; }
-.album-art { width: 44px; height: 44px; border-radius: 7px; object-fit: cover; flex-shrink: 0; }
+.album-art { width: 50px; height: 50px; border-radius: 12px; object-fit: cover; flex-shrink: 0; box-shadow: 0 10px 24px rgba(0,0,0,0.22); }
 .album-name { font-size: 13px; font-weight: 500; margin-bottom: 2px; line-height: 1.3; }
 .album-artist { font-size: 11px; color: var(--mu); margin-bottom: 4px; }
 .song-list { display: flex; flex-direction: column; gap: 5px; margin-top: 4px; }
@@ -129,7 +181,7 @@ input[type=text]:focus { border-color: rgba(123,111,255,0.5); background: var(--
 .song-artist { font-size: 11px; color: var(--mu); flex-shrink: 0; }
 .xlink { display: inline-flex; align-items: center; gap: 4px; margin-top: 8px; font-size: 11px; color: var(--pur); text-decoration: none; }
 .music-platform-links { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 7px; }
-.platform-btn { font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 6px; text-decoration: none; border: 1px solid; transition: opacity 0.15s; }
+.platform-btn { font-size: 11px; font-weight: 800; padding: 6px 10px; border-radius: 999px; text-decoration: none; border: 1px solid; transition: opacity 0.15s; }
 .platform-btn:active { opacity: 0.7; }
 .platform-btn.apple { color: #fc3c44; border-color: rgba(252,60,68,0.3); background: rgba(252,60,68,0.08); }
 .platform-btn.spotify { color: #1db954; border-color: rgba(29,185,84,0.3); background: rgba(29,185,84,0.08); }
@@ -140,21 +192,21 @@ input[type=text]:focus { border-color: rgba(123,111,255,0.5); background: var(--
 .track-num { font-size: 10px; color: var(--mu); width: 16px; text-align: right; flex-shrink: 0; }
 .track-name { font-size: 12px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .track-dur { font-size: 10px; color: var(--mu); flex-shrink: 0; }
-.track-preview { width: 22px; height: 22px; border-radius: 50%; background: var(--s2); border: 1px solid var(--bd); cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 8px; color: var(--tx); transition: background 0.15s, transform 0.1s; padding: 0; }
+.track-preview { width: 24px; height: 24px; border-radius: 50%; background: var(--s2); border: 1px solid var(--bd); cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 8px; color: var(--tx); transition: background 0.15s, transform 0.1s; padding: 0; }
 .track-preview:active { transform: scale(0.88); }
 .track-preview.playing { background: var(--acc); color: var(--bg); border-color: var(--acc); }
 .ost-type { font-size: 10px; color: var(--mu); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 2px; }
 .fashion-links { display: flex; gap: 8px; }
-.fashion-btn { flex: 1; text-align: center; padding: 8px; border-radius: 9px; background: var(--s2); border: 1px solid var(--bd); font-size: 12px; font-weight: 500; color: var(--tx); text-decoration: none; transition: border-color 0.15s; }
+.fashion-btn { flex: 1; text-align: center; padding: 9px; border-radius: 12px; background: var(--s2); border: 1px solid var(--bd); font-size: 12px; font-weight: 800; color: var(--tx); text-decoration: none; transition: border-color 0.15s; }
 .fashion-btn:active { border-color: var(--pur); }
-.trailer-card { position: relative; width: 100%; aspect-ratio: 16 / 9; border: 1px solid var(--bd); border-radius: 10px; overflow: hidden; background: var(--s2); cursor: pointer; display: block; text-decoration: none; padding: 0; }
+.trailer-card { position: relative; width: 100%; aspect-ratio: 16 / 9; border: 1px solid var(--bd); border-radius: 16px; overflow: hidden; background: var(--s2); cursor: pointer; display: block; text-decoration: none; padding: 0; }
 .trailer-card img { width: 100%; height: 100%; display: block; object-fit: cover; border: 0; }
 .trailer-play {
   position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
   background: linear-gradient(to top, rgba(0,0,0,0.55), transparent 55%);
 }
 .trailer-play span {
-  width: 48px; height: 48px; border-radius: 50%; background: var(--acc); color: var(--bg);
+  width: 52px; height: 52px; border-radius: 50%; background: linear-gradient(135deg, var(--acc), var(--sun)); color: var(--bg);
   display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 800;
   box-shadow: 0 10px 24px rgba(0,0,0,0.3);
 }
@@ -162,42 +214,101 @@ input[type=text]:focus { border-color: rgba(123,111,255,0.5); background: var(--
 
 .tmodal { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 16px; }
 .tmodal-bg { position: absolute; inset: 0; background: rgba(0,0,0,0.88); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
-.tmodal-box { position: relative; width: 92vw; max-width: 800px; background: var(--s1); border: 1px solid var(--bd); border-radius: 16px; overflow: hidden; box-shadow: 0 24px 60px rgba(0,0,0,0.6); }
+.tmodal-box { position: relative; width: 92vw; max-width: 800px; background: var(--s1); border: 1px solid var(--bd); border-radius: 22px; overflow: hidden; box-shadow: 0 24px 60px rgba(0,0,0,0.6); }
 .tmodal-close { position: absolute; top: 10px; right: 10px; z-index: 2; width: 32px; height: 32px; border-radius: 50%; background: rgba(0,0,0,0.65); border: 1px solid var(--bd); color: var(--tx); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1; }
 .tmodal-frame { position: relative; width: 100%; aspect-ratio: 16 / 9; }
 .tmodal-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
 
-footer { padding: 16px 0 calc(var(--safe-bot) + 8px); text-align: center; font-size: 11px; color: var(--mu); }
+footer { padding: 18px 0 calc(var(--safe-bot) + 10px); text-align: center; font-size: 11px; color: var(--mu); }
 footer a { color: var(--mu); }
 
 /* Light theme — applied when local time is 7am–7pm */
 html.light {
-  --bg: #f5f5f0;
-  --s1: #ffffff;
-  --s2: #eeecea;
-  --bd: rgba(0,0,0,0.09);
-  --tx: #1c1c26;
-  --mu: #7878a0;
-  --pur: #5b52e0;
+  --bg: #fff8f1;
+  --s1: rgba(255,255,255,0.82);
+  --s2: rgba(10,16,31,0.055);
+  --s3: rgba(10,16,31,0.08);
+  --bd: rgba(20,25,45,0.12);
+  --tx: #171927;
+  --mu: #687086;
+  --pur: #6f57ff;
+  --shadow: 0 18px 48px rgba(79,64,142,0.14);
 }
-html.light body::before { background: radial-gradient(circle, rgba(91,82,224,0.06) 0%, transparent 70%); }
-html.light .card { box-shadow: 0 2px 14px rgba(0,0,0,0.07); }
-html.light .logo span { color: #4c5a00; }
-html.light .rating { color: #4c5a00; background: rgba(76,90,0,0.07); border-color: rgba(76,90,0,0.22); }
-html.light .bdg.movie { color: #4c5a00; background: rgba(76,90,0,0.07); border-color: rgba(76,90,0,0.22); }
-html.light .bdg.tv { background: rgba(91,82,224,0.08); border-color: rgba(91,82,224,0.22); }
+html.light body {
+  background:
+    linear-gradient(145deg, rgba(255,94,138,0.20), transparent 30%),
+    linear-gradient(215deg, rgba(84,198,255,0.28), transparent 34%),
+    linear-gradient(315deg, rgba(69,240,180,0.22), transparent 38%),
+    var(--bg);
+}
+html.light body::before { background-image: linear-gradient(rgba(20,25,45,0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(20,25,45,0.045) 1px, transparent 1px); }
+html.light .search-wrap { background: rgba(255,255,255,0.76); }
+html.light .go svg { stroke: #10131f; }
+html.light .rating { color: #057c59; background: rgba(5,124,89,0.08); border-color: rgba(5,124,89,0.22); }
 html.light .rating-imdb { color: #8a6900; background: rgba(138,105,0,0.07); border-color: rgba(138,105,0,0.22); }
 html.light .rating-rt { color: #c2200a; background: rgba(194,32,10,0.07); border-color: rgba(194,32,10,0.22); }
-html.light .track-preview.playing { background: #4c5a00; border-color: #4c5a00; color: #fff; }
+html.light .track-preview.playing { background: #057c59; border-color: #057c59; color: #fff; }
 html.light .trailer-play span { box-shadow: 0 6px 18px rgba(0,0,0,0.18); }
 html.light .tmodal-close { background: rgba(255,255,255,0.85); }
+@media (max-width: 520px) {
+  .app { padding: 0 14px; }
+  .brand-row { display: block; }
+  .pulse-badge { display: inline-flex; margin-top: 16px; }
+  .ctop { gap: 13px; padding: 16px; }
+  .poster, .poster-ph { width: 74px; height: 111px; border-radius: 14px; }
+  .ctitle { font-size: 16px; }
+  .fashion-links { flex-direction: column; }
+}
+@media (min-width: 880px) {
+  header { padding-bottom: 26px; }
+  .logo-sub { max-width: 660px; }
+  .search-wrap { margin-bottom: 14px; }
+  .card {
+    display: grid;
+    grid-template-columns: minmax(0, 1.08fr) minmax(340px, 0.92fr);
+    align-items: stretch;
+  }
+  .ctop {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    padding: 22px;
+    border-right: 1px solid var(--bd);
+  }
+  .poster, .poster-ph { width: 108px; height: 162px; border-radius: 18px; }
+  .ctitle { font-size: 22px; }
+  .ov { font-size: 14px; -webkit-line-clamp: 7; }
+  .prov {
+    grid-column: 2;
+    border-top: 0;
+    min-height: 100%;
+  }
+  .cast-sec {
+    grid-column: 1;
+    border-right: 1px solid var(--bd);
+  }
+  .cast-sec .xsec { border-top: 1px solid var(--bd); }
+  .trailer-sec, .book-sec, .music-sec, .fashion-sec { min-width: 0; }
+  .trailer-sec { grid-column: 2; }
+  .music-sec { grid-column: 1; border-right: 1px solid var(--bd); }
+  .book-sec, .fashion-sec { grid-column: 2; }
+  .xsec, .prov { padding: 16px 18px; }
+  .cast-list { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 14px; }
+  .cast-row { display: block; }
+  .cast-character { display: block; text-align: left; margin-top: 2px; }
+  .trailer-card { max-height: 250px; }
+}
 </style>
 </head>
 <body>
 <div class="app">
   <header>
-    <div class="logo">Stream<span>Find</span></div>
-    <div class="logo-sub">Watch · Soundtrack · Shop the Look · Read the Book</div>
+    <div class="brand-row">
+      <div>
+        <div class="logo">Stream<span>Find</span></div>
+        <div class="logo-sub">Search once for where to watch, ratings, trailers, soundtracks, books, and TV outfits.</div>
+      </div>
+      <div class="pulse-badge">Live Finder</div>
+    </div>
   </header>
 
   <div class="search-wrap">
@@ -225,7 +336,7 @@ html.light .tmodal-close { background: rgba(255,255,255,0.85); }
   <div class="tmodal-box">
     <button class="tmodal-close" onclick="closeTrailer()" aria-label="Close">✕</button>
     <div class="tmodal-frame">
-      <iframe id="trailer-iframe" allowfullscreen allow="autoplay; encrypted-media; picture-in-picture"></iframe>
+      <iframe id="trailer-iframe" title="YouTube trailer player" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
     </div>
   </div>
 </div>
@@ -236,7 +347,7 @@ html.light .tmodal-close { background: rgba(255,255,255,0.85); }
   const light = h >= 7 && h < 19;
   document.documentElement.classList.toggle('light', light);
   const mc = document.querySelector('meta[name="theme-color"]');
-  if (mc) mc.content = light ? '#f5f5f0' : '#0a0a0f';
+  if (mc) mc.content = light ? '#fff8f1' : '#090b14';
   const next = new Date(); next.setHours(light ? 19 : 7, 0, 0, 0);
   if (next <= new Date()) next.setDate(next.getDate() + 1);
   setTimeout(applyTheme, next - new Date());
@@ -331,6 +442,7 @@ async function go(q) {
       out.appendChild(card);
       loadP(item, card.querySelector('.prov'));
       loadRatings(item, card);
+      loadCast(item, card);
       loadTrailer(item, card);
       loadBook(item, card);
       loadMusic(item, card);
@@ -346,8 +458,9 @@ function mkCard(item) {
   const title = esc(isM ? item.title : item.name);
   const year = ((isM ? item.release_date : item.first_air_date) || '').slice(0, 4);
   const ov = esc(item.overview || '');
+  const tmdbUrl = `https://www.themoviedb.org/${isM ? 'movie' : 'tv'}/${item.id}`;
   const tmdbRating = item.vote_average && item.vote_average > 0
-    ? `<span class="rating"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>TMDB ${item.vote_average.toFixed(1)}</span>`
+    ? `<a class="rating" href="${tmdbUrl}" target="_blank" rel="noopener" aria-label="Open ${title} on TMDB"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>TMDB ${item.vote_average.toFixed(1)}</a>`
     : '';
   const div = document.createElement('div');
   div.className = 'card';
@@ -368,6 +481,7 @@ function mkCard(item) {
     </div>
   </div>
   <div class="prov"><div class="pload"><span class="msp"></span>Checking streaming…</div></div>
+  <div class="cast-sec"></div>
   <div class="trailer-sec"></div>
   <div class="book-sec"></div>
   <div class="music-sec"></div>
@@ -401,8 +515,31 @@ async function loadRatings(item, card) {
     const rtScore = d.Ratings?.find(r => r.Source === 'Rotten Tomatoes')?.Value;
     const imdbSlot = card.querySelector('.imdb-slot');
     const rtSlot = card.querySelector('.rt-slot');
-    if (imdbRating) { imdbSlot.className = 'rating-imdb'; imdbSlot.textContent = `IMDb ${imdbRating}`; }
-    if (rtScore) { rtSlot.className = 'rating-rt'; rtSlot.innerHTML = `🍅 ${rtScore}`; }
+    if (imdbRating) {
+      imdbSlot.outerHTML = `<a class="rating-imdb" href="https://www.imdb.com/title/${ext.imdb_id}/" target="_blank" rel="noopener">IMDb ${esc(imdbRating)}</a>`;
+    }
+    if (rtScore) {
+      const title = item.title || item.name;
+      rtSlot.outerHTML = `<a class="rating-rt" href="https://www.rottentomatoes.com/search?search=${encodeURIComponent(title)}" target="_blank" rel="noopener">🍅 ${esc(rtScore)}</a>`;
+    }
+  } catch(e) {}
+}
+
+async function loadCast(item, card) {
+  const type = item.media_type === 'movie' ? 'movie' : 'tv';
+  try {
+    const r = await fetch(`${BASE}/${type}/${item.id}/credits?api_key=${K}`);
+    if (!r.ok) return;
+    const d = await r.json();
+    const cast = (d.cast || []).filter(c => c.name).slice(0, 5);
+    if (!cast.length) return;
+    card.querySelector('.cast-sec').innerHTML = `<div class="xsec">
+      <div class="xsec-lbl">Top Cast</div>
+      <div class="cast-list">${cast.map(c => `<div class="cast-row">
+        <div class="cast-name">${esc(c.name)}</div>
+        <div class="cast-character">${esc(c.character || 'Cast')}</div>
+      </div>`).join('')}</div>
+    </div>`;
   } catch(e) {}
 }
 
@@ -444,7 +581,7 @@ function renderTrailer(section, trailer) {
   const id = trailer.key;
   section.innerHTML = `<div class="xsec">
     <div class="xsec-lbl">Trailer</div>
-    <button class="trailer-card" onclick="openTrailer('${id}')" aria-label="Play trailer: ${esc(trailer.name)}">
+    <button class="trailer-card" type="button" onclick="openTrailer('${id}')" aria-label="Play trailer: ${esc(trailer.name)}">
       <img src="https://img.youtube.com/vi/${id}/hqdefault.jpg" alt="${esc(trailer.name)}" loading="lazy">
       <span class="trailer-play" aria-hidden="true"><span>▶</span></span>
     </button>
@@ -454,7 +591,10 @@ function renderTrailer(section, trailer) {
 
 function openTrailer(id) {
   const modal = document.getElementById('trailer-modal');
-  document.getElementById('trailer-iframe').src = `https://www.youtube.com/embed/${id}?autoplay=1&rel=0`;
+  const iframe = document.getElementById('trailer-iframe');
+  const origin = location.origin && location.origin !== 'null' ? location.origin : 'https://ramaraju3.github.io';
+  iframe.referrerPolicy = 'strict-origin-when-cross-origin';
+  iframe.src = `https://www.youtube.com/embed/${id}?autoplay=1&rel=0&playsinline=1&origin=${encodeURIComponent(origin)}&widget_referrer=${encodeURIComponent(location.href)}`;
   modal.style.display = 'flex';
   document.body.style.overflow = 'hidden';
 }
@@ -642,11 +782,43 @@ function renderP(section, us, item) {
     const ps = us[g.key]; if (!ps || !ps.length) return; any = true;
     html += `<div class="pgrp"><div class="plbl"><span class="dot ${g.dot}"></span>${g.label}</div>
       <div class="chips">${ps.map(p =>
-        `<div class="chip">${p.logo_path ? `<img class="plogo" src="${LB}${p.logo_path}" alt="${esc(p.provider_name)}" loading="lazy">` : ''}${esc(p.provider_name)}</div>`
+        `<a class="chip" href="${providerUrl(p.provider_name, title)}" target="_blank" rel="noopener" aria-label="Search ${esc(p.provider_name)} for ${esc(title)}">${p.logo_path ? `<img class="plogo" src="${LB}${p.logo_path}" alt="${esc(p.provider_name)}" loading="lazy">` : ''}${esc(p.provider_name)}</a>`
       ).join('')}</div></div>`;
   });
   if (!any) html = `<div class="nonefound">No streaming options in the US</div>`;
   section.innerHTML = html;
+}
+
+function providerUrl(provider, title) {
+  const p = String(provider || '').toLowerCase();
+  const q = encodeURIComponent(title || '');
+  const plus = encodeURIComponent(title || '').replace(/%20/g, '+');
+  const dashed = encodeURIComponent(String(title || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''));
+  if (p.includes('netflix')) return `https://www.netflix.com/search?q=${q}`;
+  if (p.includes('prime video') || p.includes('amazon')) return `https://www.primevideo.com/search/ref=atv_nb_sr?phrase=${q}`;
+  if (p.includes('hulu')) return `https://www.hulu.com/search?q=${q}`;
+  if (p.includes('disney')) return `https://www.disneyplus.com/search?q=${q}`;
+  if (p.includes('max') || p.includes('hbo')) return `https://www.max.com/search?q=${q}`;
+  if (p.includes('apple tv')) return `https://tv.apple.com/search?term=${q}`;
+  if (p.includes('peacock')) return `https://www.peacocktv.com/stream-tv/${dashed}`;
+  if (p.includes('paramount')) return `https://www.paramountplus.com/search/?query=${q}`;
+  if (p.includes('starz')) return `https://www.starz.com/us/en/search?q=${q}`;
+  if (p.includes('showtime')) return `https://www.paramountplus.com/search/?query=${q}`;
+  if (p.includes('youtube')) return `https://www.youtube.com/results?search_query=${plus}`;
+  if (p.includes('google play')) return `https://play.google.com/store/search?q=${q}&c=movies`;
+  if (p.includes('fandango') || p.includes('vudu')) return `https://athome.fandango.com/search?searchString=${q}`;
+  if (p.includes('microsoft')) return `https://www.microsoft.com/en-us/search/shop/movies-and-tv?q=${q}`;
+  if (p.includes('amc')) return `https://www.amcplus.com/search?q=${q}`;
+  if (p.includes('crunchyroll')) return `https://www.crunchyroll.com/search?q=${q}`;
+  if (p.includes('tubi')) return `https://tubitv.com/search/${dashed}`;
+  if (p.includes('pluto')) return `https://pluto.tv/search/details/${dashed}`;
+  if (p.includes('roku')) return `https://therokuchannel.roku.com/search/${q}`;
+  if (p.includes('plex')) return `https://watch.plex.tv/search?q=${q}`;
+  if (p.includes('kanopy')) return `https://www.kanopy.com/en/search?query=${q}`;
+  if (p.includes('hoopla')) return `https://www.hoopladigital.com/search?q=${q}&scope=everything&type=direct`;
+  if (p.includes('mubi')) return `https://mubi.com/search?q=${q}`;
+  if (p.includes('criterion')) return `https://www.criterionchannel.com/search?q=${q}`;
+  return `https://www.google.com/search?q=${encodeURIComponent(provider + ' ' + title)}`;
 }
 
 function esc(s) {
