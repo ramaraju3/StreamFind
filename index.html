@@ -391,11 +391,80 @@ async function searchTMDB(q, lang = 'en-US') {
   return res;
 }
 
+function titleOf(item) {
+  return item.title || item.name || '';
+}
+
+function normSearch(s) {
+  return String(s || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9 ]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function editDistance(a, b) {
+  if (a === b) return 0;
+  if (!a) return b.length;
+  if (!b) return a.length;
+  let prev = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    const curr = [i];
+    for (let j = 1; j <= b.length; j++) {
+      curr[j] = Math.min(
+        curr[j - 1] + 1,
+        prev[j] + 1,
+        prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)
+      );
+    }
+    prev = curr;
+  }
+  return prev[b.length];
+}
+
+function rankResults(results, q, matchCounts = {}) {
+  const nq = normSearch(q);
+  return [...results].sort((a, b) => {
+    const ta = normSearch(titleOf(a));
+    const tb = normSearch(titleOf(b));
+    const score = (item, title) => {
+      let s = 0;
+      const key = `${item.media_type}:${item.id}`;
+      if (title === nq) s += 1000;
+      if (title.startsWith(nq)) s += 250;
+      if (title.includes(nq)) s += 150;
+      if (nq.includes(title)) s += 80;
+      const compactTitle = title.replace(/\s+/g, '');
+      const compactQuery = nq.replace(/\s+/g, '');
+      const dist = editDistance(compactTitle, compactQuery);
+      s += Math.max(0, 80 - dist * 18);
+      s += (matchCounts[key] || 0) * 40;
+      s += Math.min(item.vote_count || 0, 5000) / 500;
+      return s;
+    };
+    return score(b, tb) - score(a, ta);
+  });
+}
+
 function buildFallbackQueries(q) {
-  const words = q.split(/\s+/).filter(w => w.length >= 3);
+  const words = normSearch(q).split(/\s+/).filter(w => w.length >= 3);
   const queries = new Set();
   words.forEach(w => queries.add(w));
   words.forEach((word, wi) => {
+    // Indic title transliterations often vary by aspirated consonants:
+    // durandhar -> dhurandhar, kandahar -> khandahar, etc.
+    for (let i = 0; i < word.length; i++) {
+      if (/^[bcdgjkpt]$/.test(word[i]) && word[i + 1] !== 'h') {
+        const s = word.slice(0, i + 1) + 'h' + word.slice(i + 1);
+        const nw = [...words]; nw[wi] = s; queries.add(nw.join(' '));
+      }
+      if (word[i] === 'h' && i > 0 && /^[bcdgjkpt]$/.test(word[i - 1])) {
+        const s = word.slice(0, i) + word.slice(i + 1);
+        if (s.length >= 3) { const nw = [...words]; nw[wi] = s; queries.add(nw.join(' ')); }
+      }
+    }
     // Adjacent transpositions
     for (let i = 0; i < word.length - 1; i++) {
       const s = word.slice(0, i) + word[i+1] + word[i] + word.slice(i+2);
@@ -412,7 +481,8 @@ function buildFallbackQueries(q) {
       const nw = [...words]; nw[wi] = collapsed; queries.add(nw.join(' '));
     }
   });
-  return [...queries].slice(0, 15);
+  queries.delete(normSearch(q));
+  return [...queries].slice(0, 30);
 }
 
 async function go(q) {
@@ -425,15 +495,24 @@ async function go(q) {
     if (!res.length) {
       const fallbacks = buildFallbackQueries(q);
       if (fallbacks.length) {
-        const allResults = await Promise.all(fallbacks.map(fq => searchTMDB(fq, '')));
+        const allResults = await Promise.all(fallbacks.map(fq => searchTMDB(fq, '').catch(() => [])));
         const counts = {};
-        allResults.flat().forEach(x => counts[x.id] = (counts[x.id] || 0) + 1);
+        allResults.flat().forEach(x => {
+          const key = `${x.media_type}:${x.id}`;
+          counts[key] = (counts[key] || 0) + 1;
+        });
         const seen = new Set();
         res = allResults.flat()
-          .filter(x => { if (seen.has(x.id)) return false; seen.add(x.id); return true; })
-          .sort((a, b) => counts[b.id] - counts[a.id] || (b.vote_count || 0) - (a.vote_count || 0));
+          .filter(x => {
+            const key = `${x.media_type}:${x.id}`;
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+          });
+        res = rankResults(res, q, counts);
       }
     }
+    res = rankResults(res, q);
     res = res.slice(0, 5);
     if (!res.length) { out.innerHTML = `<div class="msg">No results for "${esc(q)}"</div>`; return; }
     out.innerHTML = '';
@@ -609,7 +688,11 @@ function closeTrailer() {
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeTrailer(); });
 
 function toSlug(title) {
-  return title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  return title
+    .toLowerCase()
+    .replace(/['’`]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
 }
 
 async function loadBook(item, card) {
