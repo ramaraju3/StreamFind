@@ -50,13 +50,15 @@ body::before {
 .app { position: relative; z-index: 1; width: min(100%, 1120px); margin: 0 auto; padding: 0 22px; display: flex; flex-direction: column; min-height: 100dvh; }
 header { padding-top: calc(var(--safe-top) + 18px); padding-bottom: 22px; }
 .brand-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; }
-.logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: clamp(34px, 9vw, 64px); line-height: 0.92; letter-spacing: 0; max-width: 10ch; }
+.logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: clamp(34px, 9vw, 64px); line-height: 0.92; letter-spacing: 0; max-width: 10ch; display: inline-block; cursor: pointer; text-decoration: none; color: var(--tx); transition: opacity 0.2s; }
+.logo:hover { opacity: 0.8; }
 .logo span {
   color: transparent;
   background: linear-gradient(110deg, var(--acc), var(--sky) 45%, var(--hot));
   -webkit-background-clip: text;
   background-clip: text;
 }
+.logo-link { text-decoration: none; color: inherit; }
 .logo-sub { max-width: 520px; font-size: clamp(14px, 3.6vw, 18px); color: var(--mu); line-height: 1.5; margin-top: 14px; }
 .pulse-badge {
   flex-shrink: 0; color: var(--bg); background: linear-gradient(135deg, var(--sun), var(--acc));
@@ -303,10 +305,10 @@ html.light .tmodal-close { background: rgba(255,255,255,0.85); }
 <div class="app">
   <header>
     <div class="brand-row">
-      <div>
+      <a href="https://ramaraju3.github.io/StreamFind/" class="logo-link">
         <div class="logo">Stream<span>Find</span></div>
         <div class="logo-sub">Search once for where to watch, ratings, trailers, soundtracks, books, and TV outfits.</div>
-      </div>
+      </a>
       <div class="pulse-badge">Live Finder</div>
     </div>
   </header>
