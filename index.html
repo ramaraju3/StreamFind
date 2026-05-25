@@ -699,11 +699,82 @@ function toSlug(title) {
 
 async function loadBook(item, card) {
   const title = item.title || item.name;
+  const releaseYear = ((item.media_type === 'movie' ? item.release_date : item.first_air_date) || '').slice(0, 4);
+  const type = item.media_type === 'movie' ? 'movie' : 'tv';
+  
   try {
-    const r = await fetch(`https://openlibrary.org/search.json?title=${encodeURIComponent(title)}&limit=5&fields=title,author_name,cover_i,key`);
+    const r = await fetch(`https://openlibrary.org/search.json?title=${encodeURIComponent(title)}&limit=10&fields=title,author_name,cover_i,key,first_publish_year`);
     if (!r.ok) return;
     const d = await r.json();
-    const match = (d.docs || []).find(b => b.title?.toLowerCase() === title.toLowerCase());
+    
+    // Improved matching: title + year + author filters
+    let match = null;
+    const bookYear = releaseYear ? parseInt(releaseYear) : null;
+    
+    // Try to get original author/creator from TMDB if available
+    let tmdbAuthor = null;
+    if (type === 'movie' && item.id) {
+      try {
+        const extRes = await fetch(`${BASE}/movie/${item.id}?api_key=${K}&append_to_response=external_ids`);
+        if (extRes.ok) {
+          const extData = await extRes.json();
+          // Check for based_on info in external_ids or in the credits
+          if (extData.created_by) tmdbAuthor = extData.created_by[0]?.name;
+        }
+      } catch(e) {}
+    }
+    
+    // Scoring function for better matching
+    const scoreBook = (book) => {
+      let score = 0;
+      const bookTitle = book.title?.toLowerCase() || '';
+      const queryTitle = title.toLowerCase();
+      
+      // Title matching (must be exact or very close)
+      if (bookTitle === queryTitle) {
+        score += 100; // Exact match
+      } else if (bookTitle.includes(queryTitle) || queryTitle.includes(bookTitle)) {
+        score += 50; // Partial match
+      } else {
+        return 0; // No match
+      }
+      
+      // Year proximity (books published within 5 years before the movie)
+      if (bookYear && book.first_publish_year) {
+        const yearDiff = bookYear - book.first_publish_year;
+        if (yearDiff >= 0 && yearDiff <= 10) {
+          score += (10 - yearDiff); // Prefer books published closer to movie release
+        }
+      }
+      
+      // Author matching (if we have author info)
+      if (tmdbAuthor && book.author_name) {
+        const bookAuthors = (book.author_name || []).map(a => a.toLowerCase());
+        if (bookAuthors.some(a => a.includes(tmdbAuthor.toLowerCase().split(' ')[0]))) {
+          score += 50; // Strong match
+        }
+      }
+      
+      // Prefer books with fewer editions (single edition books are more likely to be the original)
+      // and have more structured data
+      if (book.cover_i) score += 5;
+      
+      return score;
+    };
+    
+    // Find the best matching book
+    const docs = d.docs || [];
+    if (docs.length > 0) {
+      const scored = docs.map(b => ({ book: b, score: scoreBook(b) }))
+        .filter(s => s.score > 0)
+        .sort((a, b) => b.score - a.score);
+      
+      // Only accept matches with reasonable confidence
+      if (scored.length > 0 && scored[0].score >= 50) {
+        match = scored[0].book;
+      }
+    }
+    
     if (!match) return;
     const cover = match.cover_i ? `https://covers.openlibrary.org/b/id/${match.cover_i}-M.jpg` : null;
     const author = (match.author_name || [])[0] || '';
