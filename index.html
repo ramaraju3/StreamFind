@@ -730,34 +730,39 @@ async function loadBook(item, card) {
       const bookTitle = book.title?.toLowerCase() || '';
       const queryTitle = title.toLowerCase();
       
-      // Title matching (must be exact or very close)
+      // Title matching: check if query is in book title or vice versa (allows partial matches)
       if (bookTitle === queryTitle) {
         score += 100; // Exact match
+      } else if (bookTitle.startsWith(queryTitle + ' ') || bookTitle.startsWith(queryTitle + ':')) {
+        score += 80; // Strong start match (e.g., "Harry Potter and..." starts with "Harry Potter")
       } else if (bookTitle.includes(queryTitle) || queryTitle.includes(bookTitle)) {
-        score += 50; // Partial match
+        score += 60; // Partial match
       } else {
         return 0; // No match
       }
       
-      // Year proximity (books published within 5 years before the movie)
+      // Year proximity: books published before movie/show release
       if (bookYear && book.first_publish_year) {
         const yearDiff = bookYear - book.first_publish_year;
-        if (yearDiff >= 0 && yearDiff <= 10) {
-          score += (10 - yearDiff); // Prefer books published closer to movie release
+        // Books published up to 30 years before are considered relevant
+        if (yearDiff >= 0 && yearDiff <= 30) {
+          score += Math.max(1, 10 - Math.floor(yearDiff / 3)); // Gradually decrease score
+        } else if (yearDiff > 30) {
+          score -= 20; // Published too long ago
         }
       }
       
-      // Author matching (if we have author info)
+      // Author matching (if we have author info from TMDB)
       if (tmdbAuthor && book.author_name) {
         const bookAuthors = (book.author_name || []).map(a => a.toLowerCase());
-        if (bookAuthors.some(a => a.includes(tmdbAuthor.toLowerCase().split(' ')[0]))) {
-          score += 50; // Strong match
+        const tmdbAuthorLower = tmdbAuthor.toLowerCase().split(' ')[0];
+        if (bookAuthors.some(a => a.includes(tmdbAuthorLower))) {
+          score += 40; // Strong match
         }
       }
       
-      // Prefer books with fewer editions (single edition books are more likely to be the original)
-      // and have more structured data
-      if (book.cover_i) score += 5;
+      // Prefer books with cover images (indicates it's a well-indexed book)
+      if (book.cover_i) score += 3;
       
       return score;
     };
@@ -769,8 +774,8 @@ async function loadBook(item, card) {
         .filter(s => s.score > 0)
         .sort((a, b) => b.score - a.score);
       
-      // Only accept matches with reasonable confidence
-      if (scored.length > 0 && scored[0].score >= 50) {
+      // Only accept matches with reasonable confidence (lowered threshold)
+      if (scored.length > 0 && scored[0].score >= 40) {
         match = scored[0].book;
       }
     }
