@@ -33,14 +33,12 @@ Live: [ramaraju3.github.io/StreamFind](https://ramaraju3.github.io/StreamFind/)
 
 ## Setup
 
-This is a single `index.html` file. To use your own API keys, open the file and update the constants near the top of the `<script>` block:
+The page is a single `index.html`. API keys are **not** in the page — it calls small proxy functions in `api/` (deployed on Vercel), which add the keys server-side. Set these in the Vercel project's environment variables:
 
-```js
-const K = 'your_tmdb_api_key';
-const OMDB_KEY = 'your_omdb_key';
-const TUNEFIND_USER = 'your_tunefind_username';
-const TUNEFIND_PASS = 'your_tunefind_password';
-```
+- `TMDB_KEY`
+- `OMDB_KEY`
+
+If you deploy the proxy under a different URL, update `PROXY` near the top of the `<script>` block in `index.html`.
 
 - **TMDB key** — get one free at [themoviedb.org/settings/api](https://www.themoviedb.org/settings/api)
 - **OMDB key** — get one free at [omdbapi.com/apikey.aspx](https://www.omdbapi.com/apikey.aspx)
@@ -61,7 +59,7 @@ You can search StreamFind directly from the iOS Shortcuts app or Siri:
 
 ## Deployment
 
-The app is a static single-page file — no build step, no server. It's hosted on GitHub Pages directly from `main`.
+The page is hosted on GitHub Pages directly from `main`. The `api/` proxy functions are deployed to Vercel from the same repo.
 
 ---
 
